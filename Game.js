@@ -8,6 +8,8 @@ var game = false;
 var crashBuilding= 0;
 var floor;
 
+var velocity = new THREE.Vector3();var prevTime = performance.now();
+
 var mouse = new THREE.Vector2(), INTERSECTED, CLICKED;
 var counter = 0;
 var actualTime = 0;
@@ -30,10 +32,13 @@ var positionsX;
 var shots= [];
 var enemies= [];
 
+var bullets = [];
+
+var playerweapon;
 var player = { height:54, speed:1.2, turnSpeed:Math.PI*0.02, canShoot:0 };
 var keyboard = {};
 
-
+var meshes = {};
 var particleGeometry;
 var particleCount=20;
 var explosionPower =1.06;
@@ -89,25 +94,50 @@ function loadLevel()
             mesh.position.z = 0;
             mesh.position.y = 4;
             mesh.position.x = 0;
+            
             group.add(mesh);
             
         });
-    });
-
-     
+    });  
 }
-
-function loadEnemy()
+function loadWeapon()
 {
+    // var mtlLoader = new THREE.MTLLoader();
+    // mtlLoader.load('models/uziGold.mtl', function(materials)
+    // {
+    //     materials.preload();
+        
+    //     var objLoader = new THREE.OBJLoader();
+        
+    //     objLoader.setMaterials(materials);
+    //     objLoader.load('models/uziGold.obj', function(object)
+    //     {
+            
+    //         object.traverse( function ( child ) 
+    //         {
+    //             if ( child instanceof THREE.Mesh ) 
+    //             {
+    //                 child.castShadow = true;
+    //                 child.receiveShadow = true;
+    //             }
+    //         });
+    //         weapon = object;
+    //         weapon.scale.set(10,10,10);
+    //         weapon.scale.set(10,10,10);
+    //         weapon.position.set(-90, 30, 1100);
+    //         group.add(object);
+
+            
+    //     });
+    // });
     if(!objLoader)
         objLoader = new THREE.OBJLoader();
-    
-    objLoader.load('models/rock/rock1.obj',
+    objLoader.load('models/weapon/gunCombined_process.obj',
 
         function(object)
         {
-            var texture = new THREE.TextureLoader().load('models/rock/lunarrock_s.png');
-            // var normalMap = new THREE.TextureLoader().load('models/rock/lunarrock_s.png');
+            var normalMap = new THREE.TextureLoader().load('models/weapon/T_gun_N.png');
+            var texture = new THREE.TextureLoader().load('models/weapon/T_gun_BC.png');
 
             object.traverse( function ( child ) 
             {
@@ -116,19 +146,54 @@ function loadEnemy()
                     child.castShadow = true;
                     child.receiveShadow = true;
                     child.material.map = texture;
-                    // child.material.normalMap = normalMap;
+                    child.material.normalMap = normalMap;
                 }
-            } );
-          
-
-            enemy = object;
-            // enemy.scale.set(.007,.007,.007);
-            enemy.position.set(positionsX)
-            enemy.rotation.set(Math.PI,0,0)
-            enemy.bbox = new THREE.Box3()
-            enemy.bbox.setFromObject(enemy)
+            } );                
+            weapon = object;
+            weapon.scale.set(2,2,2);
+            weapon.position.set(0, 30, 1100);
             group.add(object);
-            // enemies.push(enemy);
+                },
+
+        function ( xhr ) {
+
+            console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+    
+        },
+        // called when loading has errors
+        function ( error ) {
+    
+            console.log( 'An error happened' );
+    
+        });  
+}
+function loadEnemy()
+{
+    var loader = new THREE.FBXLoader();
+    loader.load( 'models/enemies/cacademon/cacodemon.FBX', function ( object ) 
+    {
+
+        var texture = new THREE.TextureLoader().load('models/enemies/cacademon/cacodemon_d.png');
+        var normalMap = new THREE.TextureLoader().load('models/enemies/cacademon/cacodemon_n.png');
+
+        object.traverse( function ( child ) 
+        {
+            if ( child instanceof THREE.Mesh ) 
+            {
+                child.castShadow = true;
+                child.receiveShadow = true;
+                child.material.map = texture;
+                child.material.normalMap = normalMap;
+            }
+        } );
+        
+        enemy = object;
+        enemy.scale.set(.1,.1,.1);
+        enemy.position.set(-90, 30, 1000);
+        // enemy.bbox = new THREE.Box3()
+        // enemy.bbox.setFromObject(enemy)
+        group.add(enemy);
+        enemies.push(enemy);
             
         },
         function ( xhr ) {
@@ -173,14 +238,14 @@ function cloneEnemies (i)
     scene.add(newEnemie);
 }
 
-
 function animate() {
     // spaceship.bbox.setFromObject(spaceship)
 
     var now = Date.now();
     var finish = now - gameStarted;
     currentTime = now;
-   
+    var time = Date.now() * 0.0005;
+
     var seconds = (now - actualTime)/1000
     
     // if (seconds >= 1.5 )
@@ -307,29 +372,90 @@ function animate() {
     //         shots[i].position.z -= 3
     //     }
     //   }
-    if(keyboard[87]){ // W key
-		camera.position.x += Math.sin(camera.rotation.y) * player.speed;
-		camera.position.z += -Math.cos(camera.rotation.y) * player.speed;
+    for(var index=0; index<bullets.length; index+=1){
+		if( bullets[index] === undefined ) continue;
+		if( bullets[index].alive == false ){
+			bullets.splice(index,1);
+			continue;
+		}
+		console.log(bullets[index].position)
+		bullets[index].position.add(bullets[index].velocity);
 	}
-	if(keyboard[83]){ // S key
+	if(keyboard[87]){ // W key
 		camera.position.x -= Math.sin(camera.rotation.y) * player.speed;
 		camera.position.z -= -Math.cos(camera.rotation.y) * player.speed;
 	}
+	if(keyboard[83]){ // S key
+		camera.position.x += Math.sin(camera.rotation.y) * player.speed;
+		camera.position.z += -Math.cos(camera.rotation.y) * player.speed;
+	}
 	if(keyboard[65]){ // A key
-		camera.position.x -= Math.sin(camera.rotation.y + Math.PI/2) * player.speed;
-		camera.position.z -= -Math.cos(camera.rotation.y + Math.PI/2) * player.speed;
+		camera.position.x += Math.sin(camera.rotation.y + Math.PI/2) * player.speed;
+		camera.position.z += -Math.cos(camera.rotation.y + Math.PI/2) * player.speed;
 	}
 	if(keyboard[68]){ // D key
-		camera.position.x -= Math.sin(camera.rotation.y - Math.PI/2) * player.speed;
-		camera.position.z -= -Math.cos(camera.rotation.y - Math.PI/2) * player.speed;
+		camera.position.x += Math.sin(camera.rotation.y - Math.PI/2) * player.speed;
+		camera.position.z += -Math.cos(camera.rotation.y - Math.PI/2) * player.speed;
 	}
 	
 	if(keyboard[37]){ // left arrow key
-		camera.rotation.y += player.turnSpeed;
-	}
-	if(keyboard[39]){ // right arrow key
 		camera.rotation.y -= player.turnSpeed;
 	}
+	if(keyboard[39]){ // right arrow key
+		camera.rotation.y += player.turnSpeed;
+	}
+    // shoot a bullet
+	if(keyboard[32] && player.canShoot <= 0)
+	{ // spacebar key
+		// creates a bullet as a Mesh object
+		var bullet = new THREE.Mesh(
+			new THREE.SphereGeometry(0.05,8,8),
+			new THREE.MeshBasicMaterial({color:0xffffff})
+		);
+		// this is silly.
+		// var bullet = models.pirateship.mesh.clone();
+		
+		// position the bullet to come from the player's weapon
+		bullet.position.set(
+			weapon.position.x,
+			weapon.position.y + 0.15,
+			weapon.position.z
+		);
+		// set the velocity of the bullet
+		bullet.velocity = new THREE.Vector3(
+		Math.sin(camera.rotation.y),
+			0,
+		-Math.cos(camera.rotation.y)
+		);
+
+		bullet.alive = true;
+        setTimeout(function()
+        {
+			bullet.alive = false;
+			scene.remove(bullet);
+		}, 1000);
+		
+		// add to scene, array, and set the delay to 10 frames
+		bullets.push(bullet);
+		scene.add(bullet);
+		player.canShoot = 10;
+    }
+
+	if(player.canShoot > 0) player.canShoot -= 1;
+	
+    // position the gun in front of the camera
+	weapon.position.set(
+		camera.position.x + 2 - Math.sin(camera.rotation.y + Math.PI/6) * 0.75,
+		camera.position.y - 25 + Math.sin(time*4 + camera.position.x + camera.position.z)*0.01,
+		camera.position.z  - 100 + Math.cos(camera.rotation.y + Math.PI/6) * 0.75
+	);
+	weapon.rotation.set(
+		camera.rotation.x,
+		camera.rotation.y ,
+		camera.rotation.z
+    );
+    // console.log(weapon.position)
+    // console.log(camera.position)
     
 }
 function run() 
@@ -373,9 +499,12 @@ function createScene(canvas) {
     camera = new THREE.PerspectiveCamera( 45, canvas.width / canvas.height, 1, 4000 );
 
     camera.position.set(-96, player.height, 1246);
-    camera.lookAt(new THREE.Vector3(0,player.height,0));
+    camera.lookAt(new THREE.Vector3(-96,player.height,1246));
 
-    scene.add(camera);
+     scene.add(camera);
+    // Create First Person Controls
+    // controls = new THREE.PointerLockControls( camera );
+    // scene.add( controls.getObject() );
     // orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
 
     // Create a group to hold all the objects
@@ -401,7 +530,10 @@ function createScene(canvas) {
     // loadObj();
     // loadEnemy();
     // loadTree();
-    addExplosion();loadLevel();
+    addExplosion();
+    loadLevel();
+    loadEnemy();
+    loadWeapon();
     // Create a group to hold the objects
     group = new THREE.Object3D;
     root.add(group);
