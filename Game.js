@@ -8,7 +8,20 @@ var game = false;
 var crashBuilding= 0;
 var floor;
 
-var velocity = new THREE.Vector3();var prevTime = performance.now();
+var moveForward = false;
+var moveBackward = false;
+var moveLeft = false;
+var moveRight = false;
+var canJump = false;
+var raycaster;
+
+
+var prevTime = performance.now();
+var velocity = new THREE.Vector3();
+var direction = new THREE.Vector3();
+var vertex = new THREE.Vector3();
+var color = new THREE.Color();
+
 
 var mouse = new THREE.Vector2(), INTERSECTED, CLICKED;
 var counter = 0;
@@ -38,7 +51,7 @@ var playerweapon;
 var player = { height:54, speed:1.2, turnSpeed:Math.PI*0.02, canShoot:0 };
 var keyboard = {};
 
-var meshes = {};
+var objects = []
 var particleGeometry;
 var particleCount=20;
 var explosionPower =1.06;
@@ -69,6 +82,8 @@ function startGame()
     
 }
 
+
+
 function loadLevel()
 {
     var mtlLoader = new THREE.MTLLoader();
@@ -81,55 +96,35 @@ function loadLevel()
         objLoader.setMaterials(materials);
         objLoader.load('models/map.obj', function(mesh)
         {
+            var testarray = [];
+
             
             mesh.traverse( function ( child ) 
             {
+                testarray.push( child );
+                child.bbox = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+
                 if ( child instanceof THREE.Mesh ) 
                 {
+
                     child.castShadow = true;
                     child.receiveShadow = true;
                 }
-            });    
-            mesh.scale.set(.5,.5,.5);
-            mesh.position.z = 0;
-            mesh.position.y = 4;
-            mesh.position.x = 0;
-            
-            group.add(mesh);
-            
+            }); 
+            console.log(testarray[1]) 
+            map = mesh  
+            map.scale.set(.5,.5,.5);
+            map.position.x = 100;
+            map.position.y = -35;
+            map.position.z = -1200;
+            objects.push( map );
+            group.add(map);
         });
     });  
 }
 function loadWeapon()
 {
-    // var mtlLoader = new THREE.MTLLoader();
-    // mtlLoader.load('models/uziGold.mtl', function(materials)
-    // {
-    //     materials.preload();
-        
-    //     var objLoader = new THREE.OBJLoader();
-        
-    //     objLoader.setMaterials(materials);
-    //     objLoader.load('models/uziGold.obj', function(object)
-    //     {
-            
-    //         object.traverse( function ( child ) 
-    //         {
-    //             if ( child instanceof THREE.Mesh ) 
-    //             {
-    //                 child.castShadow = true;
-    //                 child.receiveShadow = true;
-    //             }
-    //         });
-    //         weapon = object;
-    //         weapon.scale.set(10,10,10);
-    //         weapon.scale.set(10,10,10);
-    //         weapon.position.set(-90, 30, 1100);
-    //         group.add(object);
 
-            
-    //     });
-    // });
     if(!objLoader)
         objLoader = new THREE.OBJLoader();
     objLoader.load('models/weapon/gunCombined_process.obj',
@@ -150,7 +145,7 @@ function loadWeapon()
                 }
             } );                
             weapon = object;
-            weapon.scale.set(2,2,2);
+            weapon.scale.set(.05,.05,.05);
             weapon.position.set(0, 30, 1100);
             group.add(object);
                 },
@@ -190,8 +185,6 @@ function loadEnemy()
         enemy = object;
         enemy.scale.set(.1,.1,.1);
         enemy.position.set(-90, 30, 1000);
-        // enemy.bbox = new THREE.Box3()
-        // enemy.bbox.setFromObject(enemy)
         group.add(enemy);
         enemies.push(enemy);
             
@@ -248,6 +241,10 @@ function animate() {
 
     var seconds = (now - actualTime)/1000
     
+    if(controls.getObject().bbox.intersectsBox(map.bbox))
+    {
+        console.log('pega')  
+    }
     // if (seconds >= 1.5 )
     // {
     //     if ( counter < MAXRobots) 
@@ -381,30 +378,8 @@ function animate() {
 		console.log(bullets[index].position)
 		bullets[index].position.add(bullets[index].velocity);
 	}
-	if(keyboard[87]){ // W key
-		camera.position.x -= Math.sin(camera.rotation.y) * player.speed;
-		camera.position.z -= -Math.cos(camera.rotation.y) * player.speed;
-	}
-	if(keyboard[83]){ // S key
-		camera.position.x += Math.sin(camera.rotation.y) * player.speed;
-		camera.position.z += -Math.cos(camera.rotation.y) * player.speed;
-	}
-	if(keyboard[65]){ // A key
-		camera.position.x += Math.sin(camera.rotation.y + Math.PI/2) * player.speed;
-		camera.position.z += -Math.cos(camera.rotation.y + Math.PI/2) * player.speed;
-	}
-	if(keyboard[68]){ // D key
-		camera.position.x += Math.sin(camera.rotation.y - Math.PI/2) * player.speed;
-		camera.position.z += -Math.cos(camera.rotation.y - Math.PI/2) * player.speed;
-	}
-	
-	if(keyboard[37]){ // left arrow key
-		camera.rotation.y -= player.turnSpeed;
-	}
-	if(keyboard[39]){ // right arrow key
-		camera.rotation.y += player.turnSpeed;
-	}
-    // shoot a bullet
+
+
 	if(keyboard[32] && player.canShoot <= 0)
 	{ // spacebar key
 		// creates a bullet as a Mesh object
@@ -423,9 +398,9 @@ function animate() {
 		);
 		// set the velocity of the bullet
 		bullet.velocity = new THREE.Vector3(
-		Math.sin(camera.rotation.y),
+		Math.sin(controls.getObject().rotation.y),
 			0,
-		-Math.cos(camera.rotation.y)
+		-Math.cos(controls.getObject().rotation.y)
 		);
 
 		bullet.alive = true;
@@ -445,17 +420,15 @@ function animate() {
 	
     // position the gun in front of the camera
 	weapon.position.set(
-		camera.position.x + 2 - Math.sin(camera.rotation.y + Math.PI/6) * 0.75,
-		camera.position.y - 25 + Math.sin(time*4 + camera.position.x + camera.position.z)*0.01,
-		camera.position.z  - 100 + Math.cos(camera.rotation.y + Math.PI/6) * 0.75
+		controls.getObject().position.x - Math.sin(controls.getObject().rotation.y + Math.PI/6) * 0.75,
+		controls.getObject().position.y - .5 + Math.sin( controls.getObject().position.x + controls.getObject().position.z)*0.01,
+		controls.getObject().position.z - 3  + Math.cos(controls.getObject().rotation.y + Math.PI/6) * 0.75
 	);
 	weapon.rotation.set(
-		camera.rotation.x,
-		camera.rotation.y ,
-		camera.rotation.z
+        controls.getObject().rotation.x,
+		controls.getObject().rotation.y ,
+		controls.getObject().rotation.z
     );
-    // console.log(weapon.position)
-    // console.log(camera.position)
     
 }
 function run() 
@@ -467,8 +440,59 @@ function run()
             animate();
             // KF.update();
             // animator.start();
+            // if ( controls.isLocked === true ) {
+                // raycaster.ray.origin.copy( controls.getObject().position );
+				// raycaster.ray.origin.y -= 10;
 
-        }
+                // var intersections = raycaster.intersectObjects( objects );
+                // console.log(intersections)
+                // var onObject = intersections.length > 0;
+                controls.getObject().bbox.setFromObject(controls.getObject())
+                var time = performance.now();
+                var delta = ( time - prevTime ) / 1000;
+
+                velocity.x -= velocity.x * 10.0 * delta;
+                velocity.z -= velocity.z * 10.0 * delta;
+
+                velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
+
+                direction.z = Number( moveForward ) - Number( moveBackward );
+                direction.x = Number( moveLeft ) - Number( moveRight );
+                direction.normalize(); // this ensures consistent movements in all directions
+
+                if ( moveForward || moveBackward )velocity.z -= direction.z * 400.0 * delta;
+                 
+    
+                if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
+
+                // if ( onObject === true ) 
+                // {
+                //     console.log('hj')
+
+                //     velocity.y = Math.max( 0, velocity.y );
+                //     canJump = true;
+
+                // }
+
+                controls.getObject().translateX( velocity.x * delta );
+                controls.getObject().translateY( velocity.y * delta );
+                controls.getObject().translateZ( velocity.z * delta );
+
+                if ( controls.getObject().position.y < 10 ) 
+                {
+
+                    velocity.y = 0;
+                    controls.getObject().position.y = 10;
+
+                    canJump = true;
+
+                }
+
+                prevTime = time;
+
+            }
+
+        // }
 
 }
 
@@ -480,7 +504,6 @@ var mapUrl = "images/grass.png";
 var SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 2048;
 
 function createScene(canvas) {
-    
     // Create the Three.js renderer and attach it to our canvas
     renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true } );
 
@@ -496,16 +519,101 @@ function createScene(canvas) {
     scene = new THREE.Scene();
 
     // Add  a camera so we can view the scene
-    camera = new THREE.PerspectiveCamera( 45, canvas.width / canvas.height, 1, 4000 );
+    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
 
-    camera.position.set(-96, player.height, 1246);
-    camera.lookAt(new THREE.Vector3(-96,player.height,1246));
+    // camera.position.x = -96;
+    // camera.position.z =1246;
+    camera.position.set(0,0,0)
+    // camera.lookAt(new THREE.Vector3(-96,player.height,1246));
+    controls = new THREE.PointerLockControls( camera , renderer.domElement);
+    controls.getObject().bbox = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
 
-     scene.add(camera);
-    // Create First Person Controls
-    // controls = new THREE.PointerLockControls( camera );
-    // scene.add( controls.getObject() );
-    // orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+    var blocker = document.getElementById( 'container' );
+
+    blocker.addEventListener( 'click', function () {
+
+					controls.lock();
+
+                }, false );
+
+    controls.addEventListener( 'lock', function () {
+
+    } );
+
+	controls.addEventListener( 'unlock', function () {
+
+    } );
+
+              
+    scene.add( controls.getObject() );
+
+    var onKeyDown = function ( event ) 
+    {
+
+        switch ( event.keyCode ) {
+
+            case 38: // up
+            case 87: // w
+                moveForward = true;
+
+                break;
+
+            case 37: // left
+            case 65: // a
+                moveLeft = true;
+
+                break;
+
+            case 40: // down
+            case 83: // s
+                moveBackward = true;
+                break;
+
+            case 39: // right
+            case 68: // d
+                moveRight = true;
+                
+                break;
+
+            case 32: // space
+                if ( canJump === true ) velocity.y += 350;
+                canJump = false;
+                break;
+
+        }
+
+    };
+
+    var onKeyUp = function ( event ) {
+
+        switch ( event.keyCode ) {
+
+            case 38: // up
+            case 87: // w
+                moveForward = false;
+                break;
+
+            case 37: // left
+            case 65: // a
+                moveLeft = false;
+                break;
+
+            case 40: // down
+            case 83: // s
+                moveBackward = false;
+                break;
+
+            case 39: // right
+            case 68: // d
+                moveRight = false;
+                break;
+
+        }
+
+    };
+
+    raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
+
 
     // Create a group to hold all the objects
     root = new THREE.Object3D;
@@ -527,11 +635,9 @@ function createScene(canvas) {
     ambientLight = new THREE.AmbientLight ( 0x888888 );
     root.add(ambientLight);
 
-    // loadObj();
-    // loadEnemy();
-    // loadTree();
     addExplosion();
     loadLevel();
+    //loadjson();
     loadEnemy();
     loadWeapon();
     // Create a group to hold the objects
@@ -583,9 +689,11 @@ function createScene(canvas) {
 	
         
     // document.addEventListener( 'mousemove', onDocumentMouseMove );
-    window.addEventListener('keydown', keyDown);
-    window.addEventListener('keyup', keyUp);
-    window.addEventListener( 'resize', onWindowResize);
+    window.addEventListener( 'keydown', onKeyDown, false );
+    window.addEventListener( 'keyup', onKeyUp, false );
+    // window.addEventListener('keydown', keyDown);
+    // window.addEventListener('keyup', keyUp);
+    window.addEventListener( 'resize', onWindowResize, false );
     // initAnimations();
 }
 function onWindowResize() 
@@ -658,11 +766,4 @@ function addExplosion(){
 	particles = new THREE.Points( particleGeometry, pMaterial );
 	scene.add( particles );
 	particles.visible=false;
-}
-function keyDown(event){
-	keyboard[event.keyCode] = true;
-}
-
-function keyUp(event){
-	keyboard[event.keyCode] = false;
 }

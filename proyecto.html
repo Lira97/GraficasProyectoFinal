@@ -16,6 +16,9 @@
 <script src="libs/three.js/controls/PointerLockControls.js"></script>
 <script src="libs/colorpicker/js/colorpicker.js"></script>
 
+<script src="libs/three.js/controls/FPSControls.js"></script>
+<script src="libs/three.js/controls/pointerlock.js"></script>
+
 <script src="libs/three.js/loaders/OBJLoader.js"></script>
 <script src="libs/three.js/loaders/MTLLoader.js"></script>
 <script src="libs/three.js/loaders/MTLLoader.js"></script>
@@ -67,13 +70,13 @@
 		);
 	
 	</script>
-	
+		
 	</head>
 	
 	<body>
 	
 	<div id="container">
-			<canvas id="webglcanvas"></canvas>
+		<canvas id="webglcanvas"></canvas>
 		<div id="box"></div>
 		<div id="title">Space Game</div>
 		<div id="time">60 s</div>
@@ -81,13 +84,13 @@
 		<div id="highScore" >best score: 0</div>
 		<div id="healthText" >health:</div>
 		<progress id="health" value="100" max="100"></progress>
-	
+		<form>
+				<input id="startButton" type="button" name="start" value="start game"> 
+			
+			</form>
 	</div>
 	
-	<form>
-		<input id="startButton" type="button" name="start" value="start game"> 
-	
-	</form>
+
 	</body>
 	</html>
 	
