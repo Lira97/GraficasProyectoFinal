@@ -18,5 +18,21 @@ body {
 #webglcanvas {
 	border:none;
 	background-color:#ffffff;
-}
 
+}
+.buttonOption{
+  width: 20%;
+  margin-bottom: 1em;
+}
+body{
+  background-image: url('../images/menuWallpaper.jpg');
+  background-size: cover;
+}
+.menuContainer{
+  margin-top: 5em;
+}
+.gameTitle{
+  color: white;
+  font-weight: 600;
+  margin-top: 2em;
+}

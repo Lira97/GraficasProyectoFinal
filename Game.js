@@ -1,5 +1,5 @@
-var renderer = null, 
-scene = null,raycaster , 
+var renderer = null,
+scene = null,raycaster ,
 camera = null,
 root = null,
 group = null,groupTree=null,
@@ -50,7 +50,7 @@ function startGame()
     {
          highScore = score;
     }
-        
+
     document.getElementById("highScore").innerHTML = "best score: " +highScore;
     gameMinutes = 0
     gameStarted = Date.now();
@@ -63,10 +63,10 @@ function startGame()
     document.getElementById("score").innerHTML = "score: " +score;
     document.getElementById("startButton").style.display="none";
     document.getElementById("startButton").disabled = true;
-    
+
 
     game = true;
-    
+
 }
 
 function loadLevel()
@@ -75,30 +75,30 @@ function loadLevel()
     mtlLoader.load('models/map.mtl', function(materials)
     {
         materials.preload();
-        
+
         var objLoader = new THREE.OBJLoader();
-        
+
         objLoader.setMaterials(materials);
         objLoader.load('models/map.obj', function(mesh)
         {
-            
-            mesh.traverse( function ( child ) 
+
+            mesh.traverse( function ( child )
             {
-                if ( child instanceof THREE.Mesh ) 
+                if ( child instanceof THREE.Mesh )
                 {
                     child.castShadow = true;
                     child.receiveShadow = true;
                 }
-            });    
+            });
             mesh.scale.set(.5,.5,.5);
             mesh.position.z = 0;
             mesh.position.y = 4;
             mesh.position.x = 0;
-            
+
             group.add(mesh);
-            
+
         });
-    });  
+    });
 }
 function loadWeapon()
 {
@@ -106,16 +106,16 @@ function loadWeapon()
     // mtlLoader.load('models/uziGold.mtl', function(materials)
     // {
     //     materials.preload();
-        
+
     //     var objLoader = new THREE.OBJLoader();
-        
+
     //     objLoader.setMaterials(materials);
     //     objLoader.load('models/uziGold.obj', function(object)
     //     {
-            
-    //         object.traverse( function ( child ) 
+
+    //         object.traverse( function ( child )
     //         {
-    //             if ( child instanceof THREE.Mesh ) 
+    //             if ( child instanceof THREE.Mesh )
     //             {
     //                 child.castShadow = true;
     //                 child.receiveShadow = true;
@@ -127,7 +127,7 @@ function loadWeapon()
     //         weapon.position.set(-90, 30, 1100);
     //         group.add(object);
 
-            
+
     //     });
     // });
     if(!objLoader)
@@ -139,16 +139,16 @@ function loadWeapon()
             var normalMap = new THREE.TextureLoader().load('models/weapon/T_gun_N.png');
             var texture = new THREE.TextureLoader().load('models/weapon/T_gun_BC.png');
 
-            object.traverse( function ( child ) 
+            object.traverse( function ( child )
             {
-                if ( child instanceof THREE.Mesh ) 
+                if ( child instanceof THREE.Mesh )
                 {
                     child.castShadow = true;
                     child.receiveShadow = true;
                     child.material.map = texture;
                     child.material.normalMap = normalMap;
                 }
-            } );                
+            } );
             weapon = object;
             weapon.scale.set(2,2,2);
             weapon.position.set(0, 30, 1100);
@@ -158,27 +158,27 @@ function loadWeapon()
         function ( xhr ) {
 
             console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
-    
+
         },
         // called when loading has errors
         function ( error ) {
-    
+
             console.log( 'An error happened' );
-    
-        });  
+
+        });
 }
 function loadEnemy()
 {
     var loader = new THREE.FBXLoader();
-    loader.load( 'models/enemies/cacademon/cacodemon.FBX', function ( object ) 
+    loader.load( 'models/enemies/cacademon/cacodemon.FBX', function ( object )
     {
 
         var texture = new THREE.TextureLoader().load('models/enemies/cacademon/cacodemon_d.png');
         var normalMap = new THREE.TextureLoader().load('models/enemies/cacademon/cacodemon_n.png');
 
-        object.traverse( function ( child ) 
+        object.traverse( function ( child )
         {
-            if ( child instanceof THREE.Mesh ) 
+            if ( child instanceof THREE.Mesh )
             {
                 child.castShadow = true;
                 child.receiveShadow = true;
@@ -186,7 +186,7 @@ function loadEnemy()
                 child.material.normalMap = normalMap;
             }
         } );
-        
+
         enemy = object;
         enemy.scale.set(.1,.1,.1);
         enemy.position.set(-90, 30, 1000);
@@ -194,18 +194,18 @@ function loadEnemy()
         // enemy.bbox.setFromObject(enemy)
         group.add(enemy);
         enemies.push(enemy);
-            
+
         },
         function ( xhr ) {
 
             console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
-    
+
         },
         // called when loading has errors
         function ( error ) {
-    
+
             console.log( 'An error happened' );
-    
+
         });
 }
 
@@ -219,7 +219,7 @@ function bullet(initialPos)
     shot.position.copy(initialPos)
     shot.bbox = new THREE.Box3()
     shot.bbox.setFromObject(shot)
-    return shot  
+    return shot
 }
 function cloneTree (i)
 {
@@ -247,19 +247,19 @@ function animate() {
     var time = Date.now() * 0.0005;
 
     var seconds = (now - actualTime)/1000
-    
+
     // if (seconds >= 1.5 )
     // {
-    //     if ( counter < MAXRobots) 
+    //     if ( counter < MAXRobots)
     //     {
     //             counter += 1;
     //             cloneTree(counter);
     //             cloneEnemies(counter);
-    //             actualTime = now; 
+    //             actualTime = now;
     //     }
     // }
 
-    // if (dancers.length > 0) 
+    // if (dancers.length > 0)
     // {
     //     for(dancer_i of dancers)
     //     {
@@ -277,19 +277,19 @@ function animate() {
     //             }
 
     //             dancer_i.position.z += 1.2 ;
-    //             dancer_i.position.y = -4 ;   
+    //             dancer_i.position.y = -4 ;
 
-    //     } 
+    //     }
     //         if(dancer_i.position.z >= camera.position.z-5)
-    //         {  
+    //         {
     //                 dancer_i.position.set(Math.random() * (max - min) + min,Math.random() * (maxDragonY - minDragonY) + minDragonY, -105);
-                
+
     //         }
-    
-    
+
+
     // }
 
-    // if ( enemies.length > 0) 
+    // if ( enemies.length > 0)
     // {
     //     for(enemies_i of enemies)
     //     {
@@ -308,14 +308,14 @@ function animate() {
     //             }
 
     //             enemies_i.position.z += 1 ;
-            
+
     //         if(enemies_i.position.z >= camera.position.z-5)
-    //         {  
+    //         {
     //                 enemies_i.position.set(Math.random() * (max - min) + min,Math.random() * (maxDragonY - minDragonY) + minDragonY, -105);
-                
+
     //         }
     //     }
-    
+
     // }
     doExplosionLogic();
 
@@ -332,36 +332,36 @@ function animate() {
             game=false;
             // for(dancer_i of dancers)
             // {
-            //     scene.remove(dancer_i); 
-                
+            //     scene.remove(dancer_i);
+
             // }
             // dancers.splice(1, dancers.length)
 
             // for(enemies_i of enemies)
             // {
-            //     scene.remove(enemies_i); 
-                
+            //     scene.remove(enemies_i);
+
             // }
             // enemies.splice(1, enemies.length)
 
             // for(shots_i of shots)
             // {
-            //     scene.remove(shots_i); 
-                
+            //     scene.remove(shots_i);
+
             // }
             // shots.splice(1, shots.length)
-            
+
             // scene.remove(particles)
             // spaceship.position.z = 80;
             // spaceship.position.y = 2;
             // spaceship.position.x = 0;
             // counter = 0;
-            
+
         }
     }
     // for(var i=0; i<shots.length; i++) {
 
-    //     if(shots[i].position.z <= -130) 
+    //     if(shots[i].position.z <= -130)
     //     {
     //         scene.remove(shots[i])
     //         shots.splice(i, 1)
@@ -397,7 +397,7 @@ function animate() {
 		camera.position.x += Math.sin(camera.rotation.y - Math.PI/2) * player.speed;
 		camera.position.z += -Math.cos(camera.rotation.y - Math.PI/2) * player.speed;
 	}
-	
+
 	if(keyboard[37]){ // left arrow key
 		camera.rotation.y -= player.turnSpeed;
 	}
@@ -414,7 +414,7 @@ function animate() {
 		);
 		// this is silly.
 		// var bullet = models.pirateship.mesh.clone();
-		
+
 		// position the bullet to come from the player's weapon
 		bullet.position.set(
 			weapon.position.x,
@@ -434,7 +434,7 @@ function animate() {
 			bullet.alive = false;
 			scene.remove(bullet);
 		}, 1000);
-		
+
 		// add to scene, array, and set the delay to 10 frames
 		bullets.push(bullet);
 		scene.add(bullet);
@@ -442,7 +442,7 @@ function animate() {
     }
 
 	if(player.canShoot > 0) player.canShoot -= 1;
-	
+
     // position the gun in front of the camera
 	weapon.position.set(
 		camera.position.x + 2 - Math.sin(camera.rotation.y + Math.PI/6) * 0.75,
@@ -456,9 +456,9 @@ function animate() {
     );
     // console.log(weapon.position)
     // console.log(camera.position)
-    
+
 }
-function run() 
+function run()
 {
     requestAnimationFrame(function() { run(); });
     renderer.render( scene, camera );
@@ -480,7 +480,7 @@ var mapUrl = "images/grass.png";
 var SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 2048;
 
 function createScene(canvas) {
-    
+
     // Create the Three.js renderer and attach it to our canvas
     renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true } );
 
@@ -491,7 +491,7 @@ function createScene(canvas) {
     renderer.shadowMap.enabled = true;
     // // Options are THREE.BasicShadowMap, THREE.PCFShadowMap, PCFSoftShadowMap
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    
+
     // Create a new Three.js scene
     scene = new THREE.Scene();
 
@@ -520,7 +520,7 @@ function createScene(canvas) {
     spotLight.shadow.camera.near = 1;
     spotLight.shadow.camera.far = 200;
     spotLight.shadow.camera.fov = 45;
-    
+
     spotLight.shadow.mapSize.width = SHADOW_MAP_WIDTH;
     spotLight.shadow.mapSize.height = SHADOW_MAP_HEIGHT;
 
@@ -555,21 +555,21 @@ function createScene(canvas) {
     // floor = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:color, map:map, side:THREE.DoubleSide}));
     // floor.rotation.x = -Math.PI / 2;
     // floor.position.y = -4.02;
-    
+
     // // // Add the mesh to our group
     // group.add( floor );
- 
+
     // floor.castShadow = false;
     // floor.receiveShadow = true;
     // Now add the group to our scene
     scene.add( root );
 
     // axes
-	
+
 	// var imagePrefix = "images/back-";
 	// var directions  = ["xpos", "xneg", "ypos", "yneg", "zpos", "zneg"];
 	// var imageSuffix = ".png";
-	// var skyGeometry = new THREE.CubeGeometry( 230, 100, 200 );	
+	// var skyGeometry = new THREE.CubeGeometry( 230, 100, 200 );
 	// var loader = new THREE.TextureLoader();
 	// var materialArray = [];
 	// for (var i = 0; i < 6; i++)
@@ -580,15 +580,15 @@ function createScene(canvas) {
     // var skyBox = new THREE.Mesh( skyGeometry, materialArray );
     // skyBox.position.set(0,20,0)
 	// scene.add( skyBox );
-	
-        
+
+
     // document.addEventListener( 'mousemove', onDocumentMouseMove );
     window.addEventListener('keydown', keyDown);
     window.addEventListener('keyup', keyUp);
     window.addEventListener( 'resize', onWindowResize);
     // initAnimations();
 }
-function onWindowResize() 
+function onWindowResize()
 {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -596,14 +596,14 @@ function onWindowResize()
 }
 
 // function playAnimations()
-// {    
-  
+// {
+
 //     animator = new KF.KeyFrameAnimator;
-//     animator.init({ 
+//     animator.init({
 //             interps:
 //                 [
-//                     { 
-//                         keys:[0, 1], 
+//                     {
+//                         keys:[0, 1],
 //                         values:[
 //                                 { x : 0, y : 0 },
 //                                 { x : 0, y : 1 },
@@ -614,7 +614,7 @@ function onWindowResize()
 //             loop: loopAnimation,
 //             duration1:duration,
 //         });
-            
+
 // }
 
 function doExplosionLogic()
