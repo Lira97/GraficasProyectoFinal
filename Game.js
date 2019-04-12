@@ -270,14 +270,16 @@ function loadEnemy()
         });
 }
 
-function bullet(initialPos)
+function bullet()
 {
-    var geometry = new THREE.CylinderGeometry( .3, .3, 2, 32 );
-    var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+    var geometry =new THREE.SphereGeometry(0.5,8,8);
+    var material = new THREE.MeshBasicMaterial({color:0x7200ff})
     var shot = new THREE.Mesh( geometry, material );
-
-    shot.rotation.set(Math.PI,0,0)
-    shot.position.copy(initialPos)
+    shot.position.set(
+        controls.getObject().position.x + 5,
+        controls.getObject().position.y - 2,
+        controls.getObject().position.z
+    );
     shot.bbox = new THREE.Box3()
     shot.bbox.setFromObject(shot)
     return shot  
@@ -439,7 +441,8 @@ function animate() {
     //   }
     // for(var index=0; index<bullets.length; index+=1){
 	// 	if( bullets[index] === undefined ) continue;
-	// 	if( bullets[index].alive == false ){
+    // 	if( bullets[index].alive == false )
+    //{
 	// 		bullets.splice(index,1);
 	// 		continue;
 	// 	}
@@ -497,6 +500,16 @@ function animate() {
 	// 	controls.getObject().rotation.y ,
 	// 	controls.getObject().rotation.z
     // );
+
+    for(var i=0; i<shots.length; i++) {
+        if( shots[i] === undefined ) continue;
+        if( shots[i].alive == false )
+        {
+			shots.splice(i,1);
+			continue;
+        }
+        shots[i].position.add(shots[i].velocity);
+      }
     
 }
 function run() 
@@ -571,7 +584,6 @@ function createScene(canvas) {
     
     // Create a new Three.js scene
     scene = new THREE.Scene();
-	projector = new t.Projector(); // Used in bullet projection
 	scene.fog = new t.FogExp2(0xD6F1FF, 0.0005); // color, density
 
     // Add  a camera so we can view the scene
@@ -698,7 +710,8 @@ function createScene(canvas) {
     // loadLevel();
     // //loadjson();
     // loadEnemy();
-    // loadWeapon();
+    loadWeapon();
+    
     // Create a group to hold the objects
     group = new THREE.Object3D;
     root.add(group);
@@ -756,8 +769,21 @@ function createScene(canvas) {
     window.addEventListener( 'mousemove', onDocumentMouseMove, false );
     $(document).click(function(e) {
 		e.preventDefault;
-		if (e.which === 1) { // Left click only
-			createBullet();
+        if (e.which === 1) { // Left click only
+            var shot = bullet()
+            shot.alive = true;
+            setTimeout(function()
+            {
+            shot.alive = false;
+            scene.remove(shot);
+        }, 3000);
+            shot.velocity = new THREE.Vector3(
+                -Math.sin( controls.getObject().rotation.y),
+                0,
+                -Math.cos( controls.getObject().rotation.y)
+            );
+            shots.push(shot)
+            scene.add(shot)
 		}
 	});
 
@@ -900,34 +926,3 @@ var bullets = [];
 var sphereMaterial = new t.MeshBasicMaterial({color: 0x333333});
 var sphereGeo = new t.SphereGeometry(2, 6, 6);
 
-function createBullet(obj) {
-	if (obj === undefined) {
-		obj = camera;
-	}
-	var sphere = new t.Mesh(sphereGeo, sphereMaterial);
-	sphere.position.set(obj.position.x, obj.position.y * 0.8, obj.position.z);
-
-    if (obj instanceof t.Camera) 
-    {
-		var vector = new t.Vector3(mouse.x, mouse.y, 1);
-		projector.unprojectVector(vector, obj);
-		sphere.ray = new t.Ray(
-				obj.position,
-				vector.sub(obj.position).normalize()
-		);
-	}
-    else 
-    {
-		var vector = camera.position.clone();
-		sphere.ray = new t.Ray(
-				obj.position,
-				vector.sub(obj.position).normalize()
-		);
-	}
-	sphere.owner = obj;
-	
-	bullets.push(sphere);
-	scene.add(sphere);
-	
-	return sphere;
-}
