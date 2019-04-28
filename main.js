@@ -3,6 +3,9 @@
  * - Coordinates are specified as (X, Y, Z) where X and Z are horizontal and Y
  *   is vertical
  */
+var particleGeometry;
+var particleCount=20;
+var explosionPower =1.06;
 
 var map = [ // 1  2  3  4  5  6  7  8  9
 	[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // 0
@@ -33,6 +36,7 @@ var WIDTH = window.innerWidth,
 	UNITSIZE = 250,
 	WALLHEIGHT = UNITSIZE / 3,
 	MOVESPEED = 200,
+	SPEEDENEMY = 100,
 	LOOKSPEED = 0.075,
 	BULLETMOVESPEED = MOVESPEED * 5,
 	NUMAI = 5,
@@ -130,7 +134,7 @@ function init() {
 		var keyCode = event.which;
 		if (keyCode == 69 && key.Touch ) 
 		{
-			$('body').append('<div id="credits"></div>');
+			$('body').append('<div id="credits"></div> ');
 			scene.remove(key)
 		}
 	};
@@ -146,10 +150,11 @@ function animate() {
 
 // Update and display
 function render() {
-	var delta = clock.getDelta(), speed = delta * BULLETMOVESPEED;
-	var aispeed = delta * MOVESPEED;
-	controls.update(delta); // Move camera
 	
+	var delta = clock.getDelta(), speed = delta * BULLETMOVESPEED;
+	var aispeed = delta * SPEEDENEMY;
+	controls.update(delta); // Move camera
+	doExplosionLogic();
 	// Rotate the health cube
 	healthcube.rotation.x += 0.004
 	healthcube.rotation.y += 0.008;
@@ -225,6 +230,7 @@ function render() {
 		var a = ai[i];
 		if (a.health <= 0) 
 		{
+			explode(a.position.x,a.position.y,a.position.z);
 			ai.splice(i, 1);
 			scene.remove(a);
 			kills++;
@@ -241,6 +247,7 @@ function render() {
 		a.translateX(aispeed * a.lastRandomX);
 		a.translateZ(aispeed * a.lastRandomZ);
 		var c = getMapSector(a.position);
+
 		if (c.x < 0 || c.x >= mapW || c.y < 0 || c.y >= mapH || checkWallCollision(a.position)) 
 		{
 			a.translateX(-2 * aispeed * a.lastRandomX);
@@ -255,6 +262,8 @@ function render() {
 			scene.remove(a);
 			loadEnemy();
 		}
+		a.rotation.y = Math.atan2( ( cam.position.x - a.position.x ), ( cam.position.z - a.position.z ) );
+
 		/*
 		var c = getMapSector(a.position);
 		if (a.pathPos == a.path.length-1) {
@@ -354,6 +363,7 @@ function setupScene()
 			}
 		}
 	}
+	addExplosion();
 	
 	// Health cube
 	healthcube = new t.Mesh(
@@ -658,6 +668,7 @@ function loadKey()
 		key.scale.set(200,200,200);
 		key.position.set(-239.3,20,-2058);
 		key.Touch= false
+		console.log("key")
 		scene.add(key);
         },
         function ( xhr ) {
@@ -670,4 +681,46 @@ function loadKey()
             console.log( 'An error happened' );
 
         });
+}
+function doExplosionLogic()
+{
+	if(!particles.visible)return;
+	for (var i = 0; i < particleCount; i ++ ) {
+		particleGeometry.vertices[i].multiplyScalar(explosionPower);
+	}
+	if(explosionPower>1.005){
+		explosionPower-=0.001;
+	}else{
+		particles.visible=false;
+	}
+	particleGeometry.verticesNeedUpdate = true;
+}
+function explode(x,y,z)
+{
+	particles.position.y=y;
+	particles.position.z=z;
+	particles.position.x=x;
+	for (var i = 0; i < particleCount; i ++ ) {
+		var vertex = new THREE.Vector3();
+		vertex.x = -0.2+Math.random() * 0.4;
+		vertex.y = -0.2+Math.random() * 0.4 ;
+		vertex.z = -0.2+Math.random() * 0.4;
+		particleGeometry.vertices[i]=vertex;
+	}
+	explosionPower=1.2;
+	particles.visible=true;
+}
+function addExplosion(){
+	particleGeometry = new THREE.Geometry();
+	for (var i = 0; i < particleCount; i ++ ) {
+		var vertex = new THREE.Vector3();
+		particleGeometry.vertices.push( vertex );
+	}
+	var pMaterial = new THREE.PointsMaterial({
+	  color: 0x74F016,
+	  size: 5
+	});
+	particles = new THREE.Points( particleGeometry, pMaterial );
+	scene.add( particles );
+	particles.visible=false;
 }
