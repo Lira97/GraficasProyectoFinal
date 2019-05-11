@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DOOM</title>
+  <style>
+    body {
+      cursor: crosshair;
+      font-family: Georgia, Helvetica, sans-serif;
+      font-weight: bold;
+      margin: 0;
+      overflow: hidden;
+      padding: 0;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    #hud {
+      bottom: 10px;
+      position: absolute;
+      right: 10px;
+      z-index: 100;
+    }
+    #credits {
+      font-size: 12px;
+      position: absolute;
+      text-align: center;
+      top: 10px;
+      width: 100%;
+      z-index: 100;
+    }
+    p {
+      background-color: #EEEEEE;
+      border: 1px solid black;
+      display: inline-block;
+      margin: 0;
+      padding: 5px;
+    }
+    #radar {
+      background-color: #EEEEEE;
+      border: 1px solid black;
+      bottom: 10px;
+      left: 10px;
+      position: absolute;
+      z-index: 100;
+    }
+    #intro {
+      background-image: url('images/back2.jpeg');
+      cursor: pointer;
+      /* Full height */
+      height: 100%; 
+
+      /* Center and scale the image nicely */
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+        left: 0;
+    }
+    #hurt {
+      background-color: red;
+      display: none;
+      left: 0;
+      opacity: 0.15;
+      pointer-events: none;
+      position: absolute;
+      top: 0;
+      z-index: 1002;
+    }
+    #healthText 
+  {
+	position:absolute;
+	left:10px;
+	top:10px;
+  font-family: "Comic Sans MS", cursive, sans-serif;
+  font-size: 25px;
+  color: white;
+  display: none;
+
+}
+#health{
+	position:absolute;
+	left:101px;
+	top:-14px;	
+	background-color: black;
+  display: none;
+}
+
+progress {
+	display: block; /* default: inline-block */
+	width: 300px;
+	margin: 2em auto;
+	padding: 4px;
+	border: 0 none;
+	background: #444;
+	border-radius: 14px;
+	box-shadow: inset 0px 1px 1px rgba(0,0,0,0.5), 0px 1px 0px rgba(255,255,255,0.2);
+  }
+  progress::-moz-progress-bar {
+	border-radius: 12px;
+	background: #f44336;
+	box-shadow: inset 0 -2px 4px rgba(0,0,0,0.4), 0 2px 5px 0px rgba(0,0,0,0.3);
+	
+  }
+  /* webkit */
+  @media screen and (-webkit-min-device-pixel-ratio:0) {
+	progress {
+	  height: 25px;
+	}
+  }
+  progress::-webkit-progress-bar {
+	  background: transparent;
+  }  
+  progress::-webkit-progress-value {  
+	border-radius: 12px;
+	background: #f44336;
+	box-shadow: inset 0 -2px 4px rgba(0,0,0,0.4), 0 2px 5px 0px rgba(0,0,0,0.3); 
+  } 
+
+  </style>
+  <!-- <script src="jquery-1.7.2.min.js"></script> -->
+  <script src="libs/jquery-3.3.1/jquery-3.3.1.js"></script>
+<script src="libs/jquery-ui/jquery-ui.js"></script><script src="libs/three.js/three.js"></script>
+
+  <script src="Pathfinder.js"></script>
+  <!-- <script src="Three.js"></script> -->
+  <script src="libs/three.js/three.js"></script>
+  <script src="Three.FirstPersonControls.js"></script>
+  <script src="Level2.js"></script>
+  <script src="libs/three.js/loaders/FBXLoader.js"></script>
+  <script src="libs/three.js/loaders/TGALoader.js"></script>
+<script src="libs/three.js/loaders/inflate.min.js"></script>
+<script src="libs/keyframe.js/keyframe.js"></script>
+<script src="libs/three.js/loaders/OBJLoader.js"></script>
+<script src="libs/three.js/utils/cloneFBX.js"></script>
+
+<!-- <script src="libs/effects/OutlineEffect.js"></script> -->
+
+</head>
+<body>
+    <div id="content">
+      </div>
+      <div id="healthText" >health:</div>
+      <progress id="health" value="100" max="100"></progress>
+</body>
+</html>
