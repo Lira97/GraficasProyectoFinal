@@ -60,7 +60,7 @@ var WIDTH = window.innerWidth,
 	SPEEDENEMY = 100,
 	LOOKSPEED = 0.075,
 	BULLETMOVESPEED = MOVESPEED * 5,
-	NUMAI = 5,
+	NUMAI = 10,
 	PROJECTILEDAMAGE = 20;
 // Global vars
 var scene = null
@@ -185,26 +185,25 @@ function render() {
 	{
 		helper.update( delta );
 	}
-	doExplosionLogic();
-	// Rotate the health cube
-	healthcube.rotation.x += 0.004
-	healthcube.rotation.y += 0.008;
-	// Allow picking it up once per minute
-	if (Date.now() > lastHealthPickup + 60000) {
-		if (distance(cam.position.x, cam.position.z, healthcube.position.x, healthcube.position.z) < 15 && health != 100) {
-			health = Math.min(health + 50, 100);
-			$('#health').html(health);
-			lastHealthPickup = Date.now();
-		}
-		healthcube.material.wireframe = false;
-	}
-	else {
-		healthcube.material.wireframe = true;
-	}
+
 	if ( ai.length > 0) {
-        for(dancer_i of ai)
-            dancer_i.mixer.update( ( deltat ) * 0.001 );
-    }
+		for(dancer_i of ai){
+			if(distance(dancer_i.position.x, dancer_i.position.z, cam.position.x, cam.position.z) < 90){
+				health -= 0.1;		
+				action = dancer_i.mixer.clipAction(dancer_i.animations[ 15 ], dancer_i);
+				action.play();
+				setTimeout(function () {
+					action.stop();
+					action = dancer_i.mixer.clipAction( dancer_i.animations[ 14 ], dancer_i );
+				}, 1600);
+				break
+			}
+			 var action = dancer_i.mixer.clipAction( dancer_i.animations[ 14 ], dancer_i );
+			 action.play();
+			dancer_i.mixer.update( ( deltat ) * 0.001 );
+
+		}
+	}
 	// Update bullets. Walk backwards through the list so we can remove items.
 	for (var i = bullets.length-1; i >= 0; i--) {
 		var b = bullets[i], p = b.position, d = b.ray.direction;
@@ -221,35 +220,32 @@ function render() {
 			var a = ai[j];
 			// var v = a.geometry.vertices[0];
 			var c = a.position;
+			// console.log(distance(c.x, c.z, cam.position.x, cam.position.z) )
 			// var x = Math.abs(v.x), z = Math.abs(v.z);
 			//console.log(Math.round(p.x), Math.round(p.z), c.x, c.z, x, z);
-			if (p.x < c.x + 20 && p.x > c.x - 20 &&
-				p.z < c.z + 20 && p.z > c.z - 20  && b.owner != a)
+			if (p.x < c.x + 300 && p.x > c.x - 300 &&
+				p.z < c.z + 300 && p.z > c.z - 300  && b.owner != a)
 			{
 				bullets.splice(i, 1);
 				scene.remove(b);
 				a.health -= PROJECTILEDAMAGE;
-				var color = a.material.color, percent = a.health / 100;
-				a.material.color.setRGB(
-						percent * color.r,
-						percent * color.g,
-						percent * color.b
-				);
 				hit = true;
 				break;
 			}
 		}
 		// Bullet hits player
-		if (distance(p.x, p.z, cam.position.x, cam.position.z) < 25 && b.owner != cam) {
-			$('#hurt').fadeIn(75);
-			health -= 10;
-			if (health < 0) health = 0;
-			val = health < 25 ? '<span style="color: darkRed">' + health + '</span>' : health;
-			$('#health').html(val);
-			bullets.splice(i, 1);
-			scene.remove(b);
-			$('#hurt').fadeOut(350);
-		}
+		
+		// if (distance(c.x, c.z, cam.position.x, cam.position.z) < 25 && b.owner != cam) {
+		// 	$('#hurt').fadeIn(75);
+		// 	health -= 10;
+		// 	if (health < 0) health = 0;
+		// 	val = health < 25 ? '<span style="color: darkRed">' + health + '</span>' : health;
+		// 	$('#health').html(val);
+		// 	bullets.splice(i, 1);
+		// 	scene.remove(b);
+		// 	$('#hurt').fadeOut(350);
+
+		// }
 		if (!hit)
 		{
 			b.translateX(speed * d.x);
@@ -264,27 +260,30 @@ function render() {
 
 		var a = ai[i];
 		if (a.health <= 0)
-		{
-			explode(a.position.x,a.position.y,a.position.z);
-			ai.splice(i, 1);
-			scene.remove(a);
-			kills++;
-			$('#score').html(kills * 100);
+		{	
+			var action = a.mixer.clipAction( a.animations[ 5 ], a );
+			action.play();	
+			a.mixer.update( ( deltat ) * 0.0001 );
+			Muelte(i,a)
+
+			
 		}
 		// Move AI
+
+		
 		var r = Math.random();
 		if (r > 0.995)
 		{
 			a.lastRandomX = Math.random() * 2 - 1;
 			a.lastRandomZ = Math.random() * 2 - 1;
+			console.log(a.lastRandomX)
+
 		}
-		a.translateX(aispeed * a.lastRandomX);
-		a.translateZ(aispeed * a.lastRandomZ);
 		var c = getMapSector(a.position);
 
 		if (c.x < 0 || c.x >= mapW || c.y < 0 || c.y >= mapH || checkWallCollision(a.position))
 		{
-			a.translateX(-2 * aispeed * a.lastRandomX);
+			// a.translateX(-2 * aispeed * a.lastRandomX);
 			a.translateZ(-2 * aispeed * a.lastRandomZ);
 			a.lastRandomX = Math.random() * 2 - 1;
 			a.lastRandomZ = Math.random() * 2 - 1;
@@ -294,9 +293,15 @@ function render() {
 		{
 			ai.splice(i, 1);
 			scene.remove(a);
-			// loadEnemy();
 		}
+		
 		a.rotation.y = Math.atan2( ( cam.position.x - a.position.x ), ( cam.position.z - a.position.z ) );
+		a.translateZ(aispeed * a.lastRandomZ);
+		// a.translateX(aispeed * a.lastRandomX);
+		// a.lookAt(cam.position);
+        // a.translateZ(.5);
+
+
 
 		var cc = getMapSector(cam.position);
 		if (Date.now() > a.lastShot + 750 && distance(c.x, c.z, cc.x, cc.z) < 2) {
@@ -376,17 +381,12 @@ function setupScene()
 					door.position.z = (j - units/2) * UNITSIZE;
 					door.open = false
 					scene.add(door);
-					console.log(door.position)
 
 				}
 				else if (map[i][j] == 2)
 				{
-					// var wall = new t.Mesh(cube, materials[map[i][j]-1]);
 					loadRock((i - units/2) * UNITSIZE,WALLHEIGHT/2,(j - units/2) * UNITSIZE)
-					// wall.position.x = (i - units/2) * UNITSIZE;
-					// wall.position.y = WALLHEIGHT/2;
-					// wall.position.z = (j - units/2) * UNITSIZE;
-					// scene.add(wall);
+	
 
 				}
 				else{
@@ -400,15 +400,7 @@ function setupScene()
 			}
 		}
 	}
-	addExplosion();
 
-	// Health cube
-	healthcube = new t.Mesh(
-			new t.CubeGeometry(30, 30, 30),
-			new t.MeshBasicMaterial({map: t.ImageUtils.loadTexture('images/health.png')})
-	);
-	healthcube.position.set(-UNITSIZE-15, 35, -UNITSIZE-15);
-	scene.add(healthcube);
 
 	// Lighting
 	var directionalLight1 = new t.DirectionalLight( 0xF7EFBE, 0.7 );
@@ -693,24 +685,17 @@ function onDocumentKeyDown(event) {
 	if (keyCode == 69 )
 	{
 		KeyE = true
-		console.log(KeyE)
 
 	}
 	else
 	{
 		KeyE = false
-		console.log(KeyE)
 
 	}
-	// if (keyCode == 69 && key.Touch )
-	// {
-	// 	$('body').append('<div id="credits"></div> ');
-	// 	scene.remove(key)
-	// }
+
 };
 
 function ChangeLevel(open) {
-  window.location.href = "Level3.html";
     setTimeout(function () {
         if (open) {
 			$('body').append('<div id="credits"><a href="Menu.html"> </a></div>');
@@ -793,7 +778,7 @@ function clone ()
 	var c = getMapSector(cam.position);
 	var newDancer = cloneFbx(dancer);
 	newDancer.mixer =  new THREE.AnimationMixer( scene );
-	var action = newDancer.mixer.clipAction( newDancer.animations[ 0 ], newDancer );
+	var action = newDancer.mixer.clipAction( newDancer.animations[ 14 ], newDancer );
 	action.play();
 
 	do {
@@ -821,13 +806,12 @@ function loadFBX()
     mixer = new THREE.AnimationMixer( scene );
 
     var loader = new THREE.FBXLoader();
-    loader.load( 'models/monster/mutant@dead.FBX', function ( object )
+    loader.load( 'models/tfc2/tfc2.fbx', function ( object )
     {
 
         object.mixer = new THREE.AnimationMixer( scene );
-        var action = object.mixer.clipAction( object.animations[ 0 ], object );
-        // object.scale.set(0.55, 0.55, 0.55);
-
+        var action = object.mixer.clipAction( object.animations[ 14 ], object );
+		object.scale.set(50, 50, 50);
 		do {
 			var x = getRandBetween(0, mapW-1);
 			var z = getRandBetween(0, mapH-1);
@@ -839,10 +823,9 @@ function loadFBX()
 			object.pathPos = 1;
 			object.lastRandomX = Math.random();
 			object.lastRandomZ = Math.random();
-			//objects.lastShot = Date.now(); // Higher-fidelity timers aren't a big deal here.
 		action.play();
-        var texture = new THREE.TextureLoader().load('models/monster/diffuse.png');
-        // var normalMap = new THREE.TextureLoader().load('models/monster/normalMap.png');
+		var texture = new THREE.TextureLoader().load('models/tfc2/thc7_Base_Color.png');
+        var normalMap = new THREE.TextureLoader().load('models/tfc2/thc7_normal_base.png');
 
         object.traverse( function ( child )
         {
@@ -850,13 +833,24 @@ function loadFBX()
             {
                 child.castShadow = true;
                 child.receiveShadow = true;
-                // child.material.map = texture;
-                // child.material.normalMap = normalMap;
+                child.material.map = texture;
+                child.material.normalMap = normalMap;
             }
         } );
+        console.log(object.animations);
 
-       dancer = object;
-        ai.push(dancer);
+       	dancer = object;
+    	ai.push(dancer);
         scene.add( object );
     } );
+}
+function Muelte(i,a) {
+	a.position = a.position	
+    setTimeout(function () {
+		a.rotation.x = -70
+		ai.splice(i, 1);			
+		kills++;
+		$('#score').html(kills * 100);
+	}, 3000);
+	
 }
