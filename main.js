@@ -6,7 +6,21 @@
 var particleGeometry;
 var particleCount=20;
 var explosionPower =1.06;
+var door
+var KeyE
+var duration = 20000; // ms
+var helper;
+var effect
+var ready = false;
+var listener = new THREE.AudioListener();
 
+// create a global audio source
+var sound = new THREE.Audio( listener );
+
+
+var animator = null,
+duration1 = 1, 
+loopAnimation = false;
 var map = [ // 1  2  3  4  5  6  7  8  9
 	[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // 0
 	[1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], // 1
@@ -26,7 +40,7 @@ var map = [ // 1  2  3  4  5  6  7  8  9
 	[1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1], // 14
 	[1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1], // 14
 	[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1], // 14
-	[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1], // 10
+	[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1], // 10
     ], mapW = map.length, mapH = map[0].length;
 
 // Semi-constants
@@ -53,7 +67,7 @@ var finder = new PF.AStarFinder({ // Defaults to Manhattan heuristic
 
 // Initialize and run on document ready
 $(document).ready(function() {
-	$('body').append('<div id="intro">Click to start</div>');
+	$('body').append('<div id="intro"></div>');
 	$('#intro').css({width: WIDTH, height: HEIGHT}).one('click', function(e) {
 		e.preventDefault();
 		$(this).fadeOut();
@@ -100,6 +114,10 @@ function init() {
 	// Artificial Intelligence
 	setupAI();
 	loadKey();
+	cam.add( listener );
+
+	addSound();
+	
 	var light = new THREE.PointLight( 0xff0000, 1, 100 );
 	light.position.set( -239.3,20,-2058 );
 	// Handle drawing as WebGL (faster than Canvas but less supported)
@@ -127,17 +145,16 @@ function init() {
 	// $('body').append('<div id="credits"><p>Created by <a href="http://www.isaacsukin.com/">Isaac Sukin</a> using <a href="http://mrdoob.github.com/three.js/">Three.js</a><br />WASD to move, mouse to look, click to shoot</p></div>');
 	
 	// Set up "hurt" flash
+	document.getElementById("healthText").style.display="block";
+	document.getElementById("healthText").disabled = true;
+	document.getElementById("health").style.display="block";
+	document.getElementById("health").disabled = true;
 	$('body').append('<div id="hurt"></div>');
 	$('#hurt').css({width: WIDTH, height: HEIGHT,});
 	document.addEventListener("keydown", onDocumentKeyDown, false);
-	function onDocumentKeyDown(event) {
-		var keyCode = event.which;
-		if (keyCode == 69 && key.Touch ) 
-		{
-			$('body').append('<div id="credits"></div> ');
-			scene.remove(key)
-		}
-	};
+	initAnimations();
+
+
 }
 
 // Helper function for browser frames
@@ -154,6 +171,10 @@ function render() {
 	var delta = clock.getDelta(), speed = delta * BULLETMOVESPEED;
 	var aispeed = delta * SPEEDENEMY;
 	controls.update(delta); // Move camera
+	if ( ready ) 
+	{
+		helper.update( delta );
+	}
 	doExplosionLogic();
 	// Rotate the health cube
 	healthcube.rotation.x += 0.004
@@ -235,7 +256,7 @@ function render() {
 			scene.remove(a);
 			kills++;
 			$('#score').html(kills * 100);
-			loadEnemy();
+			// loadEnemy();
 		}
 		// Move AI
 		var r = Math.random();
@@ -287,16 +308,57 @@ function render() {
 		}
 
 	}
+
 	if (cam.position.x < key.position.x + 90 && cam.position.x > key.position.x - 90 &&
 		cam.position.z < key.position.z + 90 && cam.position.z > key.position.z - 90 )
 		{
-			$('body').append('<div id="credits"><p>PRESS E TO GET THE KEY</p></div>');
-			key.Touch = true
+			document.getElementById("content").style.display="block";
+			document.getElementById("content").disabled = true;
+			document.getElementById("content").innerHTML= "PRESS 'E' TO GET THE KEY";;
+			if(KeyE) 
+			{
+				key.Touch = true
+				scene.remove(key)
+				quitartexto()
+			}
+		} 
+	if (cam.position.x < door.position.x + 180 && cam.position.x > door.position.x - 180 &&
+		cam.position.z < door.position.z + 90 && cam.position.z > door.position.z - 90 )
+		{
+			document.getElementById("content").style.display="block";
+			document.getElementById("content").disabled = true;
+			document.getElementById("content").innerHTML= "PRESS E TO OPEN THE DOOR";;
+			if(KeyE)
+			{
+				if(key.Touch)
+				{
+					scene.remove(door)
+					door.open = true
+					ChangeLevel(door.open)
+					// for(var i = 0; i<= animator.interps.length -1; i++)
+					// // {
+					// // 	console.log(animator.interps[i].target)
+					// // 	animator.interps[i].target = door.position;
+					// // }
+					
+					// // playAnimations();
+					quitartexto();
+
+				}
+				else
+				{
+					document.getElementById("content").style.display="block";
+					document.getElementById("content").disabled = true;
+					document.getElementById("content").innerHTML= "YOU NEED TO FIND THE KEY TO OPEN IT";;
+					quitartexto();
+				}
+			}
 		} 
 	renderer.render(scene, cam); // Repaint
 	
 	// Death
-	// if (health <= 0) {
+	// if (health <= 0) 
+	//{
 	// 	runAnim = false;
 	// 	$(renderer.domElement).fadeOut();
 	// 	$('#radar, #hud, #credits').fadeOut();
@@ -304,7 +366,7 @@ function render() {
 	// 	$('#intro').html('Ouch! Click to restart...');
 	// 	$('#intro').one('click', function() {
 	// 		location = location;
-	// 		/*
+	// 		
 	// 		$(renderer.domElement).fadeIn();
 	// 		$('#radar, #hud, #credits').fadeIn();
 	// 		$(this).fadeOut();
@@ -317,7 +379,7 @@ function render() {
 	// 		$('#score').html(kills * 100);
 	// 		cam.translateX(-cam.position.x);
 	// 		cam.translateZ(-cam.position.z);
-	// 		*/
+	// 		
 	// 	});
 	// }
 }
@@ -338,7 +400,7 @@ function setupScene()
 		);
 	celing.position.set(0,90,0)
 	scene.add(floor);
-	scene.add(celing);
+	 scene.add(celing);
 	// console.log(floor.position)
 	// console.log(cam.position)
 
@@ -347,19 +409,34 @@ function setupScene()
 	var cube = new t.CubeGeometry(UNITSIZE, WALLHEIGHT, UNITSIZE);
 	var materials = [
 	                 new t.MeshLambertMaterial({color: 0xffefd8,map: t.ImageUtils.loadTexture('images/w.png')}),
-	                 new t.MeshLambertMaterial({/*color: 0xC5EDA0,*/map: t.ImageUtils.loadTexture('images/w.png')}),
+	                 new t.MeshLambertMaterial({/*color: 0xC5EDA0,*/map: t.ImageUtils.loadTexture('images/door.png')}),
 	                 new t.MeshLambertMaterial({color: 0xFBEBCD}),
 	                 ];
 	for (var i = 0; i < mapW; i++) {
 		for (var j = 0, m = map[i].length; j < m; j++) {
 			if (map[i][j]) 
 			{
-				console.log(map[i][j]-1)
-				var wall = new t.Mesh(cube, materials[map[i][j]-1]);
-				wall.position.x = (i - units/2) * UNITSIZE;
-				wall.position.y = WALLHEIGHT/2;
-				wall.position.z = (j - units/2) * UNITSIZE;
-				scene.add(wall);
+				if(map[i][j] == 2)
+				{
+					door = new t.Mesh(cube, materials[map[i][j]-1]);
+					door.position.x = (i - units/2) * UNITSIZE;
+					door.position.y = WALLHEIGHT/2;
+					door.position.z = (j - units/2) * UNITSIZE;
+					door.open = false
+					scene.add(door);
+					console.log(door.position)
+
+				}
+				else
+				{
+					var wall = new t.Mesh(cube, materials[map[i][j]-1]);
+					wall.position.x = (i - units/2) * UNITSIZE;
+					wall.position.y = WALLHEIGHT/2;
+					wall.position.z = (j - units/2) * UNITSIZE;
+					scene.add(wall);
+
+				}
+
 			}
 		}
 	}
@@ -380,6 +457,23 @@ function setupScene()
 	var directionalLight2 = new t.DirectionalLight( 0xF7EFBE, 0.5 );
 	directionalLight2.position.set( -0.5, -1, -0.5 );
 	scene.add( directionalLight2 );
+
+	var imagePrefix = "images/Skybox/";
+	var directions  = ["3", "3", "1", "1", "3", "3"];
+	var imageSuffix = ".png";
+	var skyGeometry = new THREE.CubeGeometry( 100, 100, 300 );	
+	var loader = new THREE.TextureLoader();
+	var materialArray = [];
+	for (var i = 0; i < 6; i++)
+		materialArray.push( new THREE.MeshBasicMaterial({
+			map: loader.load( imagePrefix + directions[i] + imageSuffix ),
+			side: THREE.BackSide
+		}));
+    var skyBox = new THREE.Mesh( skyGeometry, materialArray );
+	skyBox.position.set(2200,50,875)
+	// x: 2125, y: 41.666666666666664, z: 875
+	scene.add( skyBox );
+	
 }
 
 var ai = [];
@@ -723,4 +817,85 @@ function addExplosion(){
 	particles = new THREE.Points( particleGeometry, pMaterial );
 	scene.add( particles );
 	particles.visible=false;
+}
+
+function initAnimations() 
+{
+    animator = new KF.KeyFrameAnimator;
+    animator.init({ 
+        interps:
+            [
+                { 
+                    keys:[0, .30, .60, 1], 
+                    values:[
+                            { x:0, y : 0, z : 0 },
+                            { x:0 , y : Math.PI/4, z : 0 },
+                            { x:0 , y : Math.PI/2 , z : 0},
+                            { x:0, y : Math.PI , z : 0 },
+                            ],
+                },
+            ],
+        loop: loopAnimation,
+        duration1:duration,
+    });    
+
+}
+
+function playAnimations()
+{
+    animator.start();
+}
+function onDocumentKeyDown(event) {
+	var keyCode = event.which;
+	if (keyCode == 69 ) 
+	{
+		KeyE = true
+		console.log(KeyE)
+
+	}
+	else
+	{
+		KeyE = false
+		console.log(KeyE)
+
+	}
+	// if (keyCode == 69 && key.Touch ) 
+	// {
+	// 	$('body').append('<div id="credits"></div> ');
+	// 	scene.remove(key)
+	// }
+};
+
+function ChangeLevel() {
+    setTimeout(function () {
+			$('body').append('<div id="credits"><a href="Level2.html"> </a></div>');
+    }, 1000);
+}
+function quitartexto() {
+    setTimeout(function () {
+		document.getElementById("content").style.display="none";
+		document.getElementById("content").disabled = false;
+    }, 1000);
+}
+function addSound()
+{
+	var loader = new THREE.AudioLoader();
+	loader.load( 'sound/Suspense.mp3', function ( buffer )
+    {
+		sound.setBuffer( buffer );
+		sound.setLoop( true );
+		sound.setVolume( 0.5 );
+		sound.play();
+
+        },
+        function ( xhr ) {
+
+            console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+
+        },
+        // called when loading has errors
+        function ( error ) {
+            console.log( 'An error happened' );
+
+        });
 }
