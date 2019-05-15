@@ -19,7 +19,7 @@ var sound = new THREE.Audio( listener );
 
 
 var animator = null,
-duration1 = 1, 
+duration1 = 1,
 loopAnimation = false;
 var map = [ // 1  2  3  4  5  6  7  8  9
 	[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // 0
@@ -92,15 +92,15 @@ function init() {
 	projector = new t.Projector(); // Used in bullet projection
 	scene = new t.Scene(); // Holds all objects in the canvas
 	scene.fog = new t.FogExp2(0xD6F1FF, 0.0005); // color, density
-	
+
 	// Set up camera
 	cam = new t.PerspectiveCamera(60, ASPECT, 1, 10000); // FOV, aspect, near, far
 	cam.position.y = UNITSIZE * .2;
 	cam.position.x = -2058;
 	cam.position.z = -623;
-	
+
 	scene.add(cam);
-	
+
 	// Camera moves with mouse, flies around with WASD/arrow keys
 	controls = new t.FirstPersonControls(cam);
 	controls.movementSpeed = MOVESPEED;
@@ -110,27 +110,27 @@ function init() {
 
 	// World objects
 	setupScene();
-	
+
 	// Artificial Intelligence
 	setupAI();
 	loadKey();
 	cam.add( listener );
 
 	addSound();
-	
+
 	var light = new THREE.PointLight( 0xff0000, 1, 100 );
 	light.position.set( -239.3,20,-2058 );
 	// Handle drawing as WebGL (faster than Canvas but less supported)
 	renderer = new t.WebGLRenderer();
 	renderer.setSize(WIDTH, HEIGHT);
-	
+
 	// Add the canvas to the document
 	renderer.domElement.style.backgroundColor = '#D6F1FF'; // easier to see
 	document.body.appendChild(renderer.domElement);
-	
+
 	// Track mouse position so we know where to shoot
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-	
+
 	// Shoot on click
 	$(document).click(function(e) {
 		e.preventDefault;
@@ -138,12 +138,12 @@ function init() {
 			createBullet();
 		}
 	});
-	
+
 	// // Display HUD
 	$('body').append('<canvas id="radar" width="200" height="200"></canvas>');
 	// $('body').append('<div id="hud"><p>Health: <span id="health">100</span><br />Score: <span id="score">0</span></p></div>');
 	// $('body').append('<div id="credits"><p>Created by <a href="http://www.isaacsukin.com/">Isaac Sukin</a> using <a href="http://mrdoob.github.com/three.js/">Three.js</a><br />WASD to move, mouse to look, click to shoot</p></div>');
-	
+
 	// Set up "hurt" flash
 	document.getElementById("healthText").style.display="block";
 	document.getElementById("healthText").disabled = true;
@@ -167,11 +167,11 @@ function animate() {
 
 // Update and display
 function render() {
-	
+
 	var delta = clock.getDelta(), speed = delta * BULLETMOVESPEED;
 	var aispeed = delta * SPEEDENEMY;
 	controls.update(delta); // Move camera
-	if ( ready ) 
+	if ( ready )
 	{
 		helper.update( delta );
 	}
@@ -195,7 +195,7 @@ function render() {
 	// Update bullets. Walk backwards through the list so we can remove items.
 	for (var i = bullets.length-1; i >= 0; i--) {
 		var b = bullets[i], p = b.position, d = b.ray.direction;
-		if (checkWallCollision(p)) 
+		if (checkWallCollision(p))
 		{
 			bullets.splice(i, 1);
 			scene.remove(b);
@@ -203,7 +203,7 @@ function render() {
 		}
 		// Collide with AI
 		var hit = false;
-		for (var j = ai.length-1; j >= 0; j--) 
+		for (var j = ai.length-1; j >= 0; j--)
 		{
 			var a = ai[j];
 			// var v = a.geometry.vertices[0];
@@ -211,7 +211,7 @@ function render() {
 			// var x = Math.abs(v.x), z = Math.abs(v.z);
 			//console.log(Math.round(p.x), Math.round(p.z), c.x, c.z, x, z);
 			if (p.x < c.x + 20 && p.x > c.x - 20 &&
-				p.z < c.z + 20 && p.z > c.z - 20  && b.owner != a) 
+				p.z < c.z + 20 && p.z > c.z - 20  && b.owner != a)
 			{
 				bullets.splice(i, 1);
 				scene.remove(b);
@@ -237,19 +237,19 @@ function render() {
 			scene.remove(b);
 			$('#hurt').fadeOut(350);
 		}
-		if (!hit) 
+		if (!hit)
 		{
 			b.translateX(speed * d.x);
 			//bullets[i].translateY(speed * bullets[i].direction.y);
 			b.translateZ(speed * d.z);
 		}
 	}
-	
+
 	// Update AI.
-	for (var i = ai.length-1; i >= 0; i--) 
+	for (var i = ai.length-1; i >= 0; i--)
 	{
 		var a = ai[i];
-		if (a.health <= 0) 
+		if (a.health <= 0)
 		{
 			explode(a.position.x,a.position.y,a.position.z);
 			ai.splice(i, 1);
@@ -260,7 +260,7 @@ function render() {
 		}
 		// Move AI
 		var r = Math.random();
-		if (r > 0.995) 
+		if (r > 0.995)
 		{
 			a.lastRandomX = Math.random() * 2 - 1;
 			a.lastRandomZ = Math.random() * 2 - 1;
@@ -269,7 +269,7 @@ function render() {
 		a.translateZ(aispeed * a.lastRandomZ);
 		var c = getMapSector(a.position);
 
-		if (c.x < 0 || c.x >= mapW || c.y < 0 || c.y >= mapH || checkWallCollision(a.position)) 
+		if (c.x < 0 || c.x >= mapW || c.y < 0 || c.y >= mapH || checkWallCollision(a.position))
 		{
 			a.translateX(-2 * aispeed * a.lastRandomX);
 			a.translateZ(-2 * aispeed * a.lastRandomZ);
@@ -277,7 +277,7 @@ function render() {
 			a.lastRandomZ = Math.random() * 2 - 1;
 		}
 
-		if (c.x < -1 || c.x > mapW || c.z < -1 || c.z > mapH) 
+		if (c.x < -1 || c.x > mapW || c.z < -1 || c.z > mapH)
 		{
 			ai.splice(i, 1);
 			scene.remove(a);
@@ -315,13 +315,13 @@ function render() {
 			document.getElementById("content").style.display="block";
 			document.getElementById("content").disabled = true;
 			document.getElementById("content").innerHTML= "PRESS 'E' TO GET THE KEY";;
-			if(KeyE) 
+			if(KeyE)
 			{
 				key.Touch = true
 				scene.remove(key)
 				quitartexto()
 			}
-		} 
+		}
 	if (cam.position.x < door.position.x + 180 && cam.position.x > door.position.x - 180 &&
 		cam.position.z < door.position.z + 90 && cam.position.z > door.position.z - 90 )
 		{
@@ -340,7 +340,7 @@ function render() {
 					// // 	console.log(animator.interps[i].target)
 					// // 	animator.interps[i].target = door.position;
 					// // }
-					
+
 					// // playAnimations();
 					quitartexto();
 
@@ -353,11 +353,11 @@ function render() {
 					quitartexto();
 				}
 			}
-		} 
+		}
 	renderer.render(scene, cam); // Repaint
-	
+
 	// Death
-	// if (health <= 0) 
+	// if (health <= 0)
 	//{
 	// 	runAnim = false;
 	// 	$(renderer.domElement).fadeOut();
@@ -366,7 +366,7 @@ function render() {
 	// 	$('#intro').html('Ouch! Click to restart...');
 	// 	$('#intro').one('click', function() {
 	// 		location = location;
-	// 		
+	//
 	// 		$(renderer.domElement).fadeIn();
 	// 		$('#radar, #hud, #credits').fadeIn();
 	// 		$(this).fadeOut();
@@ -379,13 +379,13 @@ function render() {
 	// 		$('#score').html(kills * 100);
 	// 		cam.translateX(-cam.position.x);
 	// 		cam.translateZ(-cam.position.z);
-	// 		
+	//
 	// 	});
 	// }
 }
 
 // Set up the objects in the world
-function setupScene() 
+function setupScene()
 {
 	var UNITSIZE = 250, units = mapW;
 
@@ -414,7 +414,7 @@ function setupScene()
 	                 ];
 	for (var i = 0; i < mapW; i++) {
 		for (var j = 0, m = map[i].length; j < m; j++) {
-			if (map[i][j]) 
+			if (map[i][j])
 			{
 				if(map[i][j] == 2)
 				{
@@ -441,7 +441,7 @@ function setupScene()
 		}
 	}
 	addExplosion();
-	
+
 	// Health cube
 	healthcube = new t.Mesh(
 			new t.CubeGeometry(30, 30, 30),
@@ -449,7 +449,7 @@ function setupScene()
 	);
 	healthcube.position.set(-UNITSIZE-15, 35, -UNITSIZE-15);
 	scene.add(healthcube);
-	
+
 	// Lighting
 	var directionalLight1 = new t.DirectionalLight( 0xF7EFBE, 0.7 );
 	directionalLight1.position.set( 0.5, 1, 0.5 );
@@ -461,7 +461,7 @@ function setupScene()
 	var imagePrefix = "images/Skybox/";
 	var directions  = ["3", "3", "1", "1", "3", "3"];
 	var imageSuffix = ".png";
-	var skyGeometry = new THREE.CubeGeometry( 100, 100, 300 );	
+	var skyGeometry = new THREE.CubeGeometry( 100, 100, 300 );
 	var loader = new THREE.TextureLoader();
 	var materialArray = [];
 	for (var i = 0; i < 6; i++)
@@ -473,7 +473,7 @@ function setupScene()
 	skyBox.position.set(2200,50,875)
 	// x: 2125, y: 41.666666666666664, z: 875
 	scene.add( skyBox );
-	
+
 }
 
 var ai = [];
@@ -571,14 +571,14 @@ function drawRadar() {
 	for (var i = 0; i < mapW; i++) {
 		for (var j = 0, m = map[i].length; j < m; j++) {
 			var d = 0;
-			for (var k = 0, n = ai.length; k < n; k++) 
+			for (var k = 0, n = ai.length; k < n; k++)
 			{
 				var e = getMapSector(ai[k].position);
 				if (i == e.x && j == e.z) {
 					d++;
 				}
 			}
-			if (i == c.x && j == c.z && d == 0) 
+			if (i == c.x && j == c.z && d == 0)
 			{
 				context.fillStyle = '#0000FF';
 				context.fillRect(i * 11, j * 11, (i+1)*10, (j+1)*25);
@@ -617,7 +617,7 @@ function createBullet(obj) {
 	var sphere = new t.Mesh(sphereGeo, sphereMaterial);
 	sphere.position.set(obj.position.x, obj.position.y * 0.8, obj.position.z);
 
-	if (obj instanceof t.Camera) 
+	if (obj instanceof t.Camera)
 	{
 		var vector = new t.Vector3(mouse.x, mouse.y, 1);
 		projector.unprojectVector(vector, obj);
@@ -634,10 +634,10 @@ function createBullet(obj) {
 		);
 	}
 	sphere.owner = obj;
-	
+
 	bullets.push(sphere);
 	scene.add(sphere);
-	
+
 	return sphere;
 }
 
@@ -819,14 +819,14 @@ function addExplosion(){
 	particles.visible=false;
 }
 
-function initAnimations() 
+function initAnimations()
 {
     animator = new KF.KeyFrameAnimator;
-    animator.init({ 
+    animator.init({
         interps:
             [
-                { 
-                    keys:[0, .30, .60, 1], 
+                {
+                    keys:[0, .30, .60, 1],
                     values:[
                             { x:0, y : 0, z : 0 },
                             { x:0 , y : Math.PI/4, z : 0 },
@@ -837,7 +837,7 @@ function initAnimations()
             ],
         loop: loopAnimation,
         duration1:duration,
-    });    
+    });
 
 }
 
@@ -847,7 +847,7 @@ function playAnimations()
 }
 function onDocumentKeyDown(event) {
 	var keyCode = event.which;
-	if (keyCode == 69 ) 
+	if (keyCode == 69 )
 	{
 		KeyE = true
 		console.log(KeyE)
@@ -859,7 +859,7 @@ function onDocumentKeyDown(event) {
 		console.log(KeyE)
 
 	}
-	// if (keyCode == 69 && key.Touch ) 
+	// if (keyCode == 69 && key.Touch )
 	// {
 	// 	$('body').append('<div id="credits"></div> ');
 	// 	scene.remove(key)
@@ -867,6 +867,7 @@ function onDocumentKeyDown(event) {
 };
 
 function ChangeLevel() {
+    window.location.href = "Level2.html";
     setTimeout(function () {
 			$('body').append('<div id="credits"><a href="Level2.html"> </a></div>');
     }, 1000);
