@@ -25,7 +25,10 @@ var spotlight
 // create a global audio source
 var sound = new THREE.Audio( listener );
 var lock = true
-
+var lockbullet = true
+var lockheal = true
+var numBullets = 100;
+var lastHealthPickup = 0
 var animator = null,
 duration1 = 1,
 loopAnimation = false;
@@ -67,7 +70,7 @@ var WIDTH = window.innerWidth,
 var scene = null
 var t = THREE, cam, renderer, controls, clock, projector, model, skin;
 var runAnim = true, mouse = { x: 0, y: 0 }, kills = 0, health = 100;
-var healthCube, lastHealthPickup = 0;
+var healthCube,ammo, lastHealthPickup = 0;
 /*
 var finder = new PF.AStarFinder({ // Defaults to Manhattan heuristic
 	allowDiagonal: true,
@@ -149,7 +152,13 @@ function init() {
 	$(document).click(function(e) {
 		e.preventDefault;
 		if (e.which === 1) { // Left click only
+			if(numBullets > 0)
+			{
 			createBullet();
+			numBullets -= 1
+			}
+			document.getElementById("score").innerHTML = "Bullets: " + numBullets;
+
 		}
 	});
 
@@ -160,6 +169,10 @@ function init() {
 	document.getElementById("healthText").disabled = true;
 	document.getElementById("health").style.display="block";
 	document.getElementById("health").disabled = true;
+
+	document.getElementById("score").innerHTML = "Bullets: " + numBullets;
+	document.getElementById("score").style.display="block";
+	document.getElementById("score").disabled = true;
 
 	$('body').append('<div id="hurt"></div>');
 	$('#hurt').css({width: WIDTH, height: HEIGHT,});
@@ -185,8 +198,34 @@ function render() {
 	var delta = clock.getDelta(), speed = delta * BULLETMOVESPEED;
 	var aispeed = delta * SPEEDENEMY;
 	controls.update(delta); // Move camera
-
+	console.log(numBullets)
+	healthcube.rotation.x += 0.004
+	healthcube.rotation.y += 0.008;
+	// Allow picking it up once per minute
+		if (distance(cam.position.x, cam.position.z, healthcube.position.x, healthcube.position.z) < 15 && lockheal) {
+			// numBullets += 10 s
+			lockheal = false
+			// lastHealthPickup = Date.now();
+			scene.remove(healthcube)
+			health += 20;	
+			if (health > 100 )
+			{
+				var num = health - 100 
+				health -= num 
+			}
+			document.getElementById("health").value = Math.floor(health);
+		}
 	
+	ammo.rotation.x += 0.004
+	ammo.rotation.y += 0.008;
+	// Allow picking it up once per minute
+		if (distance(cam.position.x, cam.position.z, ammo.position.x, ammo.position.z) < 15 && lockbullet) {
+			numBullets += 40 
+			lockbullet = false
+			scene.remove(ammo)
+			document.getElementById("score").innerHTML = "Bullets: " + numBullets;
+			// document.getElementById("health").value = Math.floor(health);
+		}
 	if ( ai.length == 0)
 	{
 	
@@ -195,28 +234,6 @@ function render() {
 		
 	}
 
-	// if ( ai.length > 0) {
-	// 	for(dancer_i of ai)
-	// 	{
-	// 		if (dancer_i.health <= 0)
-	// 		{	console.log(dancer_i)
-	// 			var Death = dancer_i.mixer.clipAction( dancer_i.animations[ 0 ], dancer_i );
-	// 			Death.setLoop(THREE.LoopOnce);
-	// 			Death.clampWhenFinished = true;
-	// 			Death.play();
-	// 			// Muelte()
-	// 		}
-	// 		if(distance(dancer_i.position.x, dancer_i.position.z, cam.position.x, cam.position.z) < 90){
-	// 			health -= 0.1;		
-	// 			action = dancer_i.mixer.clipAction(dancer_i.animations[ 7 ], dancer_i);
-	// 			action.play();
-	// 		}
-	// 		//  var action = dancer_i.mixer.clipAction( dancer_i.animations[ 11 ], dancer_i );
-	// 		//  action.play();
-	// 		dancer_i.mixer.update( ( deltat ) * 0.001 );
-
-	// 	}
-	// }
 	for (var i = bullets.length-1; i >= 0; i--) {
 		var b = bullets[i], p = b.position, d = b.ray.direction;
 		if (checkWallCollision(p))
@@ -291,11 +308,11 @@ function render() {
 			}
 	
 		}
-
 		var cc = getMapSector(cam.position);
-		if (Date.now() > a.lastShot + 750 && distance(c.x, c.z, cc.x, cc.z) < 2) {
+		if (Date.now() > a.lastShot + 750 && distance(c.x, c.z, cc.x, cc.z) < 2 ) {
 			createBullet(a);
 			a.lastShot = Date.now();
+			
 		}
 
 	}
@@ -342,6 +359,7 @@ function render() {
 // Set up the objects in the world
 function setupScene()
 {
+	
 	var UNITSIZE = 250, units = mapW;
 
 	// Geometry: floor
@@ -355,12 +373,20 @@ function setupScene()
 		);
 	celing.position.set(0,90,0)
 	scene.add(floor);
-	//  scene.add(celing);
-	// console.log(floor.position)
-	// console.log(cam.position)
 
-	// console.log(celing.position)
-	// Geometry: walls
+	healthcube = new t.Mesh(
+		new t.CubeGeometry(30, 30, 30),
+		new t.MeshBasicMaterial({map: t.ImageUtils.loadTexture('images/health.png')})
+	);
+	healthcube.position.set(-1611, 35, -1584);
+	scene.add(healthcube);
+	ammo = new t.Mesh(
+		new t.CubeGeometry(30, 30, 30),
+		new t.MeshBasicMaterial({map: t.ImageUtils.loadTexture('images/ammo.png')})
+	);
+	ammo.position.set(466, 35, 276);
+	scene.add(ammo);
+
 	var cube = new t.CubeGeometry(UNITSIZE, WALLHEIGHT, UNITSIZE);
 	var materials = [
 	                 new t.MeshLambertMaterial({color: 0xffefd8,map: t.ImageUtils.loadTexture('images/wall3.jpg')}),
