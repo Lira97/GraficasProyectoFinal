@@ -26,23 +26,23 @@ var sound = new THREE.Audio( listener );
 
 
 var animator = null,
-duration1 = 1, 
+duration1 = 1,
 loopAnimation = false;
 var map = [ // 1  2  3  4  5  6  7  8  9
 	[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // 0
-	[1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1], // 1
-	[1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1], // 2
-	[1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1], // 3
-	[1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1], // 4
-	[1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1], // 5
-	[1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1], // 6
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 1
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 2
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 3
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 4
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 5
+	[1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1], // 6
 	[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 7
 	[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 8
-	[1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1], // 9
-	[1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1], // 10
-	[1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1], // 11
-	[1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1], // 12
-	[1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1], // 13
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 9
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 10
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 11
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 12
+	[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 13
 	[1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1], // 14
 	[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 14
 	[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 14
@@ -55,12 +55,12 @@ var WIDTH = window.innerWidth,
 	HEIGHT = window.innerHeight,
 	ASPECT = WIDTH / HEIGHT,
 	UNITSIZE = 250,
-	WALLHEIGHT = UNITSIZE / 3,
+	WALLHEIGHT = UNITSIZE,
 	MOVESPEED = 200,
-	SPEEDENEMY = 100,
+	SPEEDENEMY = 10,
 	LOOKSPEED = 0.075,
 	BULLETMOVESPEED = MOVESPEED * 5,
-	NUMAI = 5,
+	NUMAI = 10,
 	PROJECTILEDAMAGE = 20;
 // Global vars
 var scene = null
@@ -75,8 +75,8 @@ var finder = new PF.AStarFinder({ // Defaults to Manhattan heuristic
 
 // Initialize and run on document ready
 $(document).ready(function() {
-	$('body').append('<div id="intro">Click to start</div>');
-	$('#intro').css({width: WIDTH, height: HEIGHT}).one('click', function(e) {
+	$('body').append('<div id="level2">Click to start</div>');
+	$('#level2').css({width: WIDTH, height: HEIGHT}).one('click', function(e) {
 		e.preventDefault();
 		$(this).fadeOut();
 		init();
@@ -100,15 +100,15 @@ function init() {
 	projector = new t.Projector(); // Used in bullet projection
 	scene = new t.Scene(); // Holds all objects in the canvas
 	// scene.fog = new t.FogExp2(0xD6F1FF, 0.0005); // color, density
-	
+
 	// Set up camera
 	cam = new t.PerspectiveCamera(60, ASPECT, 1, 10000); // FOV, aspect, near, far
 	cam.position.y = UNITSIZE * .2;
 	cam.position.x = -2058;
 	cam.position.z = -623;
-	
+
 	scene.add(cam);
-	
+
 	// Camera moves with mouse, flies around with WASD/arrow keys
 	controls = new t.FirstPersonControls(cam);
 	controls.movementSpeed = MOVESPEED;
@@ -118,7 +118,7 @@ function init() {
 
 	// World objects
 	setupScene();
-	
+
 	// Artificial Intelligence
 	loadFBX()
 	loadPortal()
@@ -131,14 +131,14 @@ function init() {
 	// Handle drawing as WebGL (faster than Canvas but less supported)
 	renderer = new t.WebGLRenderer();
 	renderer.setSize(WIDTH, HEIGHT);
-	
+
 	// Add the canvas to the document
 	renderer.domElement.style.backgroundColor = '#D6F1FF'; // easier to see
 	document.body.appendChild(renderer.domElement);
-	
+
 	// Track mouse position so we know where to shoot
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-	
+
 	// Shoot on click
 	$(document).click(function(e) {
 		e.preventDefault;
@@ -146,12 +146,12 @@ function init() {
 			createBullet();
 		}
 	});
-	
+
 	// // Display HUD
 	$('body').append('<canvas id="radar" width="200" height="200"></canvas>');
-	// $('body').append('<div id="hud"><p>Health: <span id="health">100</span><br />Score: <span id="score">0</span></p></div>');
+	$('body').append('<div id="hud"><p>Health: <span id="health">100</span><br />Score: <span id="score">0</span></p></div>');
 	// $('body').append('<div id="credits"><p>Created by <a href="http://www.isaacsukin.com/">Isaac Sukin</a> using <a href="http://mrdoob.github.com/three.js/">Three.js</a><br />WASD to move, mouse to look, click to shoot</p></div>');
-	
+
 	// Set up "hurt" flash
 	document.getElementById("healthText").style.display="block";
 	document.getElementById("healthText").disabled = true;
@@ -160,8 +160,6 @@ function init() {
 	$('body').append('<div id="hurt"></div>');
 	$('#hurt').css({width: WIDTH, height: HEIGHT,});
 	document.addEventListener("keydown", onDocumentKeyDown, false);
-	initAnimations();
-	setupAI()
 
 }
 
@@ -181,34 +179,33 @@ function render() {
 	var delta = clock.getDelta(), speed = delta * BULLETMOVESPEED;
 	var aispeed = delta * SPEEDENEMY;
 	controls.update(delta); // Move camera
-	if ( ready ) 
+	if ( ready )
 	{
 		helper.update( delta );
 	}
-	doExplosionLogic();
-	// Rotate the health cube
-	healthcube.rotation.x += 0.004
-	healthcube.rotation.y += 0.008;
-	// Allow picking it up once per minute
-	if (Date.now() > lastHealthPickup + 60000) {
-		if (distance(cam.position.x, cam.position.z, healthcube.position.x, healthcube.position.z) < 15 && health != 100) {
-			health = Math.min(health + 50, 100);
-			$('#health').html(health);
-			lastHealthPickup = Date.now();
-		}
-		healthcube.material.wireframe = false;
-	}
-	else {
-		healthcube.material.wireframe = true;
-	}
+
 	if ( ai.length > 0) {
-        for(dancer_i of ai)
-            dancer_i.mixer.update( ( deltat ) * 0.001 );
-    }
+		for(dancer_i of ai){
+			if(distance(dancer_i.position.x, dancer_i.position.z, cam.position.x, cam.position.z) < 90){
+				health -= 0.1;		
+				action = dancer_i.mixer.clipAction(dancer_i.animations[ 15 ], dancer_i);
+				action.play();
+				setTimeout(function () {
+					action.stop();
+					action = dancer_i.mixer.clipAction( dancer_i.animations[ 14 ], dancer_i );
+				}, 1600);
+				break
+			}
+			 var action = dancer_i.mixer.clipAction( dancer_i.animations[ 14 ], dancer_i );
+			 action.play();
+			dancer_i.mixer.update( ( deltat ) * 0.001 );
+
+		}
+	}
 	// Update bullets. Walk backwards through the list so we can remove items.
 	for (var i = bullets.length-1; i >= 0; i--) {
 		var b = bullets[i], p = b.position, d = b.ray.direction;
-		if (checkWallCollision(p)) 
+		if (checkWallCollision(p))
 		{
 			bullets.splice(i, 1);
 			scene.remove(b);
@@ -216,87 +213,93 @@ function render() {
 		}
 		// Collide with AI
 		var hit = false;
-		for (var j = ai.length-1; j >= 0; j--) 
+		for (var j = ai.length-1; j >= 0; j--)
 		{
 			var a = ai[j];
 			// var v = a.geometry.vertices[0];
 			var c = a.position;
+			// console.log(distance(c.x, c.z, cam.position.x, cam.position.z) )
 			// var x = Math.abs(v.x), z = Math.abs(v.z);
 			//console.log(Math.round(p.x), Math.round(p.z), c.x, c.z, x, z);
-			if (p.x < c.x + 20 && p.x > c.x - 20 &&
-				p.z < c.z + 20 && p.z > c.z - 20  && b.owner != a) 
+			if (p.x < c.x + 300 && p.x > c.x - 300 &&
+				p.z < c.z + 300 && p.z > c.z - 300  && b.owner != a)
 			{
 				bullets.splice(i, 1);
 				scene.remove(b);
 				a.health -= PROJECTILEDAMAGE;
-				var color = a.material.color, percent = a.health / 100;
-				a.material.color.setRGB(
-						percent * color.r,
-						percent * color.g,
-						percent * color.b
-				);
 				hit = true;
 				break;
 			}
 		}
 		// Bullet hits player
-		if (distance(p.x, p.z, cam.position.x, cam.position.z) < 25 && b.owner != cam) {
-			$('#hurt').fadeIn(75);
-			health -= 10;
-			if (health < 0) health = 0;
-			val = health < 25 ? '<span style="color: darkRed">' + health + '</span>' : health;
-			$('#health').html(val);
-			bullets.splice(i, 1);
-			scene.remove(b);
-			$('#hurt').fadeOut(350);
-		}
-		if (!hit) 
+		
+		// if (distance(c.x, c.z, cam.position.x, cam.position.z) < 25 && b.owner != cam) {
+		// 	$('#hurt').fadeIn(75);
+		// 	health -= 10;
+		// 	if (health < 0) health = 0;
+		// 	val = health < 25 ? '<span style="color: darkRed">' + health + '</span>' : health;
+		// 	$('#health').html(val);
+		// 	bullets.splice(i, 1);
+		// 	scene.remove(b);
+		// 	$('#hurt').fadeOut(350);
+
+		// }
+		if (!hit)
 		{
 			b.translateX(speed * d.x);
 			//bullets[i].translateY(speed * bullets[i].direction.y);
 			b.translateZ(speed * d.z);
 		}
 	}
-	
+
 	// Update AI.
-	for (var i = ai.length-1; i >= 0; i--) 
+	for (var i = ai.length-1; i >= 0; i--)
 	{
 		
 		var a = ai[i];
-		if (a.health <= 0) 
-		{
-			explode(a.position.x,a.position.y,a.position.z);
-			ai.splice(i, 1);
-			scene.remove(a);
-			kills++;
-			$('#score').html(kills * 100);
+		if (a.health <= 0)
+		{	
+			var action = a.mixer.clipAction( a.animations[ 5 ], a );
+			action.play();	
+			a.mixer.update( ( deltat ) * 0.0001 );
+			Muelte(i,a)
+
+			
 		}
 		// Move AI
+
+		
 		var r = Math.random();
-		if (r > 0.995) 
+		if (r > 0.995)
 		{
 			a.lastRandomX = Math.random() * 2 - 1;
 			a.lastRandomZ = Math.random() * 2 - 1;
+			console.log(a.lastRandomX)
+
 		}
-		a.translateX(aispeed * a.lastRandomX);
-		a.translateZ(aispeed * a.lastRandomZ);
 		var c = getMapSector(a.position);
 
-		if (c.x < 0 || c.x >= mapW || c.y < 0 || c.y >= mapH || checkWallCollision(a.position)) 
+		if (c.x < 0 || c.x >= mapW || c.y < 0 || c.y >= mapH || checkWallCollision(a.position))
 		{
-			a.translateX(-2 * aispeed * a.lastRandomX);
+			// a.translateX(-2 * aispeed * a.lastRandomX);
 			a.translateZ(-2 * aispeed * a.lastRandomZ);
 			a.lastRandomX = Math.random() * 2 - 1;
 			a.lastRandomZ = Math.random() * 2 - 1;
 		}
 
-		if (c.x < -1 || c.x > mapW || c.z < -1 || c.z > mapH) 
+		if (c.x < -1 || c.x > mapW || c.z < -1 || c.z > mapH)
 		{
 			ai.splice(i, 1);
 			scene.remove(a);
-			// loadEnemy();
 		}
+		
 		a.rotation.y = Math.atan2( ( cam.position.x - a.position.x ), ( cam.position.z - a.position.z ) );
+		a.translateZ(aispeed * a.lastRandomZ);
+		// a.translateX(aispeed * a.lastRandomX);
+		// a.lookAt(cam.position);
+        // a.translateZ(.5);
+
+
 
 		var cc = getMapSector(cam.position);
 		if (Date.now() > a.lastShot + 750 && distance(c.x, c.z, cc.x, cc.z) < 2) {
@@ -307,7 +310,7 @@ function render() {
 	}
 
 	renderer.render(scene, cam); // Repaint
-	
+
 	// Death
 	// if (health <= 0) {
 	// 	runAnim = false;
@@ -336,7 +339,7 @@ function render() {
 }
 
 // Set up the objects in the world
-function setupScene() 
+function setupScene()
 {
 	var UNITSIZE = 250, units = mapW;
 
@@ -359,14 +362,14 @@ function setupScene()
 	// Geometry: walls
 	var cube = new t.CubeGeometry(UNITSIZE, WALLHEIGHT, UNITSIZE);
 	var materials = [
-	                 new t.MeshLambertMaterial({color: 0xffefd8,map: t.ImageUtils.loadTexture('images/wall3.jpg')}),
+	                 new t.MeshLambertMaterial({color: 0xffefd8,map: t.ImageUtils.loadTexture('images/w.png')}),
 					 new t.MeshLambertMaterial({color: 0xFBEBCD}),
 					 new t.MeshLambertMaterial({/*color: 0xC5EDA0,*/map: t.ImageUtils.loadTexture('images/door.png')}),
 
 	                 ];
 	for (var i = 0; i < mapW; i++) {
 		for (var j = 0, m = map[i].length; j < m; j++) {
-			if (map[i][j]) 
+			if (map[i][j])
 			{
 				if(map[i][j] == 2)
 				{
@@ -376,17 +379,12 @@ function setupScene()
 					door.position.z = (j - units/2) * UNITSIZE;
 					door.open = false
 					scene.add(door);
-					console.log(door.position)
 
 				}
 				else if (map[i][j] == 2)
 				{
-					// var wall = new t.Mesh(cube, materials[map[i][j]-1]);
 					loadRock((i - units/2) * UNITSIZE,WALLHEIGHT/2,(j - units/2) * UNITSIZE)
-					// wall.position.x = (i - units/2) * UNITSIZE;
-					// wall.position.y = WALLHEIGHT/2;
-					// wall.position.z = (j - units/2) * UNITSIZE;
-					// scene.add(wall);
+	
 
 				}
 				else{
@@ -400,16 +398,8 @@ function setupScene()
 			}
 		}
 	}
-	addExplosion();
-	
-	// Health cube
-	healthcube = new t.Mesh(
-			new t.CubeGeometry(30, 30, 30),
-			new t.MeshBasicMaterial({map: t.ImageUtils.loadTexture('images/health.png')})
-	);
-	healthcube.position.set(-UNITSIZE-15, 35, -UNITSIZE-15);
-	scene.add(healthcube);
-	
+
+
 	// Lighting
 	var directionalLight1 = new t.DirectionalLight( 0xF7EFBE, 0.7 );
 	directionalLight1.position.set( 0.5, 1, 0.5 );
@@ -418,10 +408,10 @@ function setupScene()
 	directionalLight2.position.set( -0.5, -1, -0.5 );
 	scene.add( directionalLight2 );
 
-	var imagePrefix = "images/Skybox/";
-	var directions  = ["3", "3", "3", "3", "3", "3"];
+	var imagePrefix = "images/SkyboxLevel3/";
+	var directions  = ["1", "2", "3", "4", "5", "6"];
 	var imageSuffix = ".png";
-	var skyGeometry = new THREE.CubeGeometry( 10000, 10000, 10000 );	
+	var skyGeometry = new THREE.CubeGeometry( 9000, 9000, 9000 );
 	var loader = new THREE.TextureLoader();
 	var materialArray = [];
 	for (var i = 0; i < 6; i++)
@@ -430,24 +420,15 @@ function setupScene()
 			side: THREE.BackSide
 		}));
     var skyBox = new THREE.Mesh( skyGeometry, materialArray );
-	skyBox.position.set(2200,50,875)
+	// skyBox.position.set(0,0,0)
 	// x: 2125, y: 41.666666666666664, z: 875
 	scene.add( skyBox );
-	
+
 }
 
 var ai = [];
 var aiGeo = new t.CubeGeometry(40, 40, 40);
 
-function setupAI() {
-	setTimeout(function () {
-		for (var i = 0; i < NUMAI; i++) 
-		{
-			clone()
-		}
-    }, 1000);
-
-}
 
 function getAIpath(a) {
 	var p = getMapSector(a.position);
@@ -514,14 +495,14 @@ function drawRadar() {
 	for (var i = 0; i < mapW; i++) {
 		for (var j = 0, m = map[i].length; j < m; j++) {
 			var d = 0;
-			for (var k = 0, n = ai.length; k < n; k++) 
+			for (var k = 0, n = ai.length; k < n; k++)
 			{
 				var e = getMapSector(ai[k].position);
 				if (i == e.x && j == e.z) {
 					d++;
 				}
 			}
-			if (i == c.x && j == c.z && d == 0) 
+			if (i == c.x && j == c.z && d == 0)
 			{
 				context.fillStyle = '#0000FF';
 				context.fillRect(i * 11, j * 11, (i+1)*10, (j+1)*25);
@@ -560,7 +541,7 @@ function createBullet(obj) {
 	var sphere = new t.Mesh(sphereGeo, sphereMaterial);
 	sphere.position.set(obj.position.x, obj.position.y * 0.8, obj.position.z);
 
-	if (obj instanceof t.Camera) 
+	if (obj instanceof t.Camera)
 	{
 		var vector = new t.Vector3(mouse.x, mouse.y, 1);
 		projector.unprojectVector(vector, obj);
@@ -577,10 +558,10 @@ function createBullet(obj) {
 		);
 	}
 	sphere.owner = obj;
-	
+
 	bullets.push(sphere);
 	scene.add(sphere);
-	
+
 	return sphere;
 }
 
@@ -662,14 +643,14 @@ function addExplosion(){
 	particles.visible=false;
 }
 
-function initAnimations() 
+function initAnimations()
 {
     animator = new KF.KeyFrameAnimator;
-    animator.init({ 
+    animator.init({
         interps:
             [
-                { 
-                    keys:[0, .30, .60, 1], 
+                {
+                    keys:[0, .30, .60, 1],
                     values:[
                             { x:0, y : 0, z : 0 },
                             { x:0 , y : Math.PI/4, z : 0 },
@@ -680,7 +661,7 @@ function initAnimations()
             ],
         loop: loopAnimation,
         duration1:duration,
-    });    
+    });
 
 }
 
@@ -690,23 +671,17 @@ function playAnimations()
 }
 function onDocumentKeyDown(event) {
 	var keyCode = event.which;
-	if (keyCode == 69 ) 
+	if (keyCode == 69 )
 	{
 		KeyE = true
-		console.log(KeyE)
 
 	}
 	else
 	{
 		KeyE = false
-		console.log(KeyE)
 
 	}
-	// if (keyCode == 69 && key.Touch ) 
-	// {
-	// 	$('body').append('<div id="credits"></div> ');
-	// 	scene.remove(key)
-	// }
+
 };
 
 function ChangeLevel(open) {
@@ -717,16 +692,11 @@ function ChangeLevel(open) {
     }, 2000);
 }
 
-function waitcreate() {
-    setTimeout(function () {
-		setupAI()
-    }, 1000);
-}
 
 function addSound()
 {
 	var loader = new THREE.AudioLoader();
-	loader.load( 'sound/Suspense.mp3', function ( buffer )
+	loader.load( 'sound/finalBoss.mp3', function ( buffer )
     {
 		sound.setBuffer( buffer );
 		sound.setLoop( true );
@@ -792,7 +762,7 @@ function clone ()
 	var c = getMapSector(cam.position);
 	var newDancer = cloneFbx(dancer);
 	newDancer.mixer =  new THREE.AnimationMixer( scene );
-	var action = newDancer.mixer.clipAction( newDancer.animations[ 0 ], newDancer );
+	var action = newDancer.mixer.clipAction( newDancer.animations[ 14 ], newDancer );
 	action.play();
 
 	do {
@@ -820,13 +790,12 @@ function loadFBX()
     mixer = new THREE.AnimationMixer( scene );
 
     var loader = new THREE.FBXLoader();
-    loader.load( 'models/monster/mutant@dead.FBX', function ( object ) 
+    loader.load( 'models/tfc2/tfc2.fbx', function ( object )
     {
 
         object.mixer = new THREE.AnimationMixer( scene );
-        var action = object.mixer.clipAction( object.animations[ 0 ], object );
-        // object.scale.set(0.55, 0.55, 0.55);
-		
+        var action = object.mixer.clipAction( object.animations[ 14 ], object );
+		object.scale.set(100, 100, 100);
 		do {
 			var x = getRandBetween(0, mapW-1);
 			var z = getRandBetween(0, mapH-1);
@@ -834,14 +803,13 @@ function loadFBX()
 			x = Math.floor(x - mapW/2) * UNITSIZE;
 			z = Math.floor(z - mapW/2) * UNITSIZE;
 			object.position.set(x, 3, z);
-			object.health = 100;
+			object.health = 100000;
 			object.pathPos = 1;
 			object.lastRandomX = Math.random();
 			object.lastRandomZ = Math.random();
-			//objects.lastShot = Date.now(); // Higher-fidelity timers aren't a big deal here.
 		action.play();
-        var texture = new THREE.TextureLoader().load('models/monster/diffuse.png');
-        // var normalMap = new THREE.TextureLoader().load('models/monster/normalMap.png');
+		var texture = new THREE.TextureLoader().load('models/tfc2/thc7_Base_Color.png');
+        var normalMap = new THREE.TextureLoader().load('models/tfc2/thc7_normal_base.png');
 
         object.traverse( function ( child )
         {
@@ -849,13 +817,24 @@ function loadFBX()
             {
                 child.castShadow = true;
                 child.receiveShadow = true;
-                // child.material.map = texture;
-                // child.material.normalMap = normalMap;
+                child.material.map = texture;
+                child.material.normalMap = normalMap;
             }
         } );
+        console.log(object.animations);
 
-       dancer = object;
-        ai.push(dancer);
+       	dancer = object;
+    	ai.push(dancer);
         scene.add( object );
     } );
+}
+function Muelte(i,a) {
+	a.position = a.position	
+    setTimeout(function () {
+		a.rotation.x = -70
+		ai.splice(i, 1);			
+		kills++;
+		$('#score').html(kills * 100);
+	}, 3000);
+	
 }
