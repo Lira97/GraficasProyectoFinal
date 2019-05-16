@@ -236,6 +236,7 @@ function render() {
 			bullets.splice(i, 1);
 			scene.remove(b);
 			$('#hurt').fadeOut(350);
+			document.getElementById("health").value -= 10;
 		}
 		if (!hit)
 		{
@@ -357,31 +358,37 @@ function render() {
 	renderer.render(scene, cam); // Repaint
 
 	// Death
-	// if (health <= 0)
-	//{
-	// 	runAnim = false;
-	// 	$(renderer.domElement).fadeOut();
-	// 	$('#radar, #hud, #credits').fadeOut();
-	// 	$('#intro').fadeIn();
-	// 	$('#intro').html('Ouch! Click to restart...');
-	// 	$('#intro').one('click', function() {
-	// 		location = location;
-	//
-	// 		$(renderer.domElement).fadeIn();
-	// 		$('#radar, #hud, #credits').fadeIn();
-	// 		$(this).fadeOut();
-	// 		runAnim = true;
-	// 		animate();
-	// 		health = 100;
-	// 		$('#health').html(health);
-	// 		kills--;
-	// 		if (kills <= 0) kills = 0;
-	// 		$('#score').html(kills * 100);
-	// 		cam.translateX(-cam.position.x);
-	// 		cam.translateZ(-cam.position.z);
-	//
-	// 	});
-	// }
+	if (health <= 0)
+	{
+		sound.stop();
+		runAnim = false;
+		document.getElementById("health").style.display="none";
+		document.getElementById("health").disabled = true;
+		document.getElementById("healthText").style.display="none";
+		document.getElementById("healthText").disabled = true;
+		document.getElementById("health").value = 100
+		$(renderer.domElement).fadeOut();
+		$('#radar, #hud, #credits').fadeOut();
+		$('#intro').fadeIn();
+		$('#intro').html('Ouch! Click to restart...');
+		$('#intro').one('click', function() {
+			location = location;
+	
+			$(renderer.domElement).fadeIn();
+			$('#radar, #hud, #credits').fadeIn();
+			$(this).fadeOut();
+			runAnim = true;
+			animate();
+			health = 100;
+			$('#health').html(health);
+			kills--;
+			if (kills <= 0) kills = 0;
+			$('#score').html(kills * 100);
+			cam.translateX(-cam.position.x);
+			cam.translateZ(-cam.position.z);
+	
+		});
+	}
 }
 
 // Set up the objects in the world

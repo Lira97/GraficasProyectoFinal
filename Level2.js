@@ -24,7 +24,7 @@ var portal = false;
 var spotlight
 // create a global audio source
 var sound = new THREE.Audio( listener );
-
+var lock = true
 
 var animator = null,
 duration1 = 1,
@@ -61,7 +61,7 @@ var WIDTH = window.innerWidth,
 	SPEEDENEMY = 100,
 	LOOKSPEED = 0.075,
 	BULLETMOVESPEED = MOVESPEED * 5,
-	NUMAI = 3,
+	NUMAI = 5,
 	PROJECTILEDAMAGE = 20;
 // Global vars
 var scene = null
@@ -160,6 +160,7 @@ function init() {
 	document.getElementById("healthText").disabled = true;
 	document.getElementById("health").style.display="block";
 	document.getElementById("health").disabled = true;
+
 	$('body').append('<div id="hurt"></div>');
 	$('#hurt').css({width: WIDTH, height: HEIGHT,});
 	document.addEventListener("keydown", onDocumentKeyDown, false);
@@ -193,19 +194,29 @@ function render() {
 		ChangeLevel(portal)
 		
 	}
-	if ( ai.length > 0) {
-		for(dancer_i of ai){
-			if(distance(dancer_i.position.x, dancer_i.position.z, cam.position.x, cam.position.z) < 90){
-				health -= 0.1;		
-				action = dancer_i.mixer.clipAction(dancer_i.animations[ 7 ], dancer_i);
-				action.play();
-			}
-			//  var action = dancer_i.mixer.clipAction( dancer_i.animations[ 11 ], dancer_i );
-			//  action.play();
-			dancer_i.mixer.update( ( deltat ) * 0.001 );
 
-		}
-	}
+	// if ( ai.length > 0) {
+	// 	for(dancer_i of ai)
+	// 	{
+	// 		if (dancer_i.health <= 0)
+	// 		{	console.log(dancer_i)
+	// 			var Death = dancer_i.mixer.clipAction( dancer_i.animations[ 0 ], dancer_i );
+	// 			Death.setLoop(THREE.LoopOnce);
+	// 			Death.clampWhenFinished = true;
+	// 			Death.play();
+	// 			// Muelte()
+	// 		}
+	// 		if(distance(dancer_i.position.x, dancer_i.position.z, cam.position.x, cam.position.z) < 90){
+	// 			health -= 0.1;		
+	// 			action = dancer_i.mixer.clipAction(dancer_i.animations[ 7 ], dancer_i);
+	// 			action.play();
+	// 		}
+	// 		//  var action = dancer_i.mixer.clipAction( dancer_i.animations[ 11 ], dancer_i );
+	// 		//  action.play();
+	// 		dancer_i.mixer.update( ( deltat ) * 0.001 );
+
+	// 	}
+	// }
 	for (var i = bullets.length-1; i >= 0; i--) {
 		var b = bullets[i], p = b.position, d = b.ray.direction;
 		if (checkWallCollision(p))
@@ -244,18 +255,26 @@ function render() {
 	// Update AI.
 	for (var i = ai.length-1; i >= 0; i--)
 	{
-	
-
 		var a = ai[i];
-		if (a.health <= 0)
-		{	
-			var action = a.mixer.clipAction( a.animations[ 0 ], a );
-			action.play();	
-			a.mixer.update( ( deltat ) * 0.0001 );
-			Muelte(i,a)
-			
-		}
+		if (a.health <= 0 && lock)
+			{	lock = false
+				var Death = a.mixer.clipAction( a.animations[ 0 ], a );
+				Death.setLoop(THREE.LoopOnce);
+				Death.clampWhenFinished = true;
+				Death.play();
 
+				Muelte(i,a)
+			}
+			if(distance(a.position.x, a.position.z, cam.position.x, cam.position.z) < 90)
+			{
+				health -= .5;		
+				action = a.mixer.clipAction(a.animations[ 7 ], a);
+				action.play();
+				document.getElementById("health").value -= .5;
+			}
+			//  var action = a.mixer.clipAction( a.animations[ 11 ], a );
+			//  action.play();
+			a.mixer.update( ( deltat ) * 0.001 );
 		if (checkWallCollision(a.position))
 		{
 	
@@ -283,31 +302,41 @@ function render() {
 
 	renderer.render(scene, cam); // Repaint
 
-	// Death
-	// if (health <= 0) {
-	// 	runAnim = false;
-	// 	$(renderer.domElement).fadeOut();
-	// 	$('#radar, #hud, #credits').fadeOut();
-	// 	$('#intro').fadeIn();
-	// 	$('#intro').html('Ouch! Click to restart...');
-	// 	$('#intro').one('click', function() {
-	// 		location = location;
-	// 		/*
-	// 		$(renderer.domElement).fadeIn();
-	// 		$('#radar, #hud, #credits').fadeIn();
-	// 		$(this).fadeOut();
-	// 		runAnim = true;
-	// 		animate();
-	// 		health = 100;
-	// 		$('#health').html(health);
-	// 		kills--;
-	// 		if (kills <= 0) kills = 0;
-	// 		$('#score').html(kills * 100);
-	// 		cam.translateX(-cam.position.x);
-	// 		cam.translateZ(-cam.position.z);
-	// 		*/
-	// 	});
-	// }
+	if (health <= 0) {
+		sound.stop();
+		runAnim = false;
+		document.getElementById("health").style.display="none";
+		document.getElementById("health").disabled = true;
+		document.getElementById("healthText").style.display="none";
+		document.getElementById("healthText").disabled = true;
+		document.getElementById("health").value = 100
+		$(renderer.domElement).fadeOut();
+	
+		$('#radar, #hud, #credits').fadeOut();
+		$('#level2').fadeIn();
+		$('#level2').html('Ouch! Click to restart...');
+		$('#level2').one('click', function() {
+			location = location;
+			// document.getElementById("healthText").style.display="block";
+			// document.getElementById("healthText").disabled = true;
+			// document.getElementById("health").style.display="block";
+			// document.getElementById("health").disabled = true;
+			/*
+			$(renderer.domElement).fadeIn();
+			$('#radar, #hud, #credits').fadeIn();
+			$(this).fadeOut();
+			runAnim = true;
+			animate();
+			health = 100;
+			$('#health').html(health);
+			kills--;
+			if (kills <= 0) kills = 0;
+			$('#score').html(kills * 100);
+			cam.translateX(-cam.position.x);
+			cam.translateZ(-cam.position.z);
+			*/
+		});
+	}
 }
 
 // Set up the objects in the world
@@ -773,6 +802,7 @@ function clone ()
 		newDancer.position.set(x, 3, z);
 		newDancer.health = 100;
 		newDancer.pathPos = 1;
+		newDancer.dead ;
 		newDancer.lastRandomX = Math.random();
 		newDancer.lastRandomZ = Math.random();
 		// newDancer.lastShot = Date.now(); // Higher-fidelity timers aren't a big deal here.
@@ -805,6 +835,7 @@ function loadFBX()
 			object.pathPos = 1;
 			object.lastRandomX = Math.random();
 			object.lastRandomZ = Math.random();
+			object.dead ;
 		action.play();
 
 		var texture = new THREE.TextureLoader().load('models/NC2/NC2_body_Diffuse.png');
@@ -827,16 +858,17 @@ function loadFBX()
         console.log(object.animations);
 
        	dancer = object;
-    	ai.push(dancer);
-        scene.add( object );
+    	// ai.push(dancer);
+        // scene.add( object );
     } );
 }
-function Muelte(i,a) {
+function Muelte(i,a) 
+{	
     setTimeout(function () {
 		ai.splice(i, 1);	
 		scene.remove(a);		
 		kills++;
-		$('#score').html(kills * 100);
-	}, 1300);
-	
+		lock = true
+		console.log("uuuuu")
+	}, 1300);	
 }

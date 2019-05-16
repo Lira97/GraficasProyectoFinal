@@ -137,6 +137,18 @@ p {
     left: 0;
 
 }
+#gameover{
+  background-image: url('../images/gameover.jpeg');
+  cursor: pointer;
+  /* Full height */
+  height: 100%;
+  /* Center and scale the image nicely */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+    left: 0;
+
+}
 #hurt {
   background-color: red;
   display: none;
