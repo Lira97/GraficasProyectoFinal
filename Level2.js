@@ -20,7 +20,8 @@ var listener = new THREE.AudioListener();
 var mixer = null;
 var dancer = null;
 var currentTime = Date.now();
-
+var portal = false;
+var spotlight
 // create a global audio source
 var sound = new THREE.Audio( listener );
 
@@ -60,7 +61,7 @@ var WIDTH = window.innerWidth,
 	SPEEDENEMY = 100,
 	LOOKSPEED = 0.075,
 	BULLETMOVESPEED = MOVESPEED * 5,
-	NUMAI = 10,
+	NUMAI = 3,
 	PROJECTILEDAMAGE = 20;
 // Global vars
 var scene = null
@@ -102,7 +103,7 @@ function init() {
 	// scene.fog = new t.FogExp2(0xD6F1FF, 0.0005); // color, density
 
 	// Set up camera
-	cam = new t.PerspectiveCamera(60, ASPECT, 1, 10000); // FOV, aspect, near, far
+	cam = new t.PerspectiveCamera(60, ASPECT, 1, 60000); // FOV, aspect, near, far
 	cam.position.y = UNITSIZE * .2;
 	cam.position.x = -2058;
 	cam.position.z = -623;
@@ -132,6 +133,11 @@ function init() {
 	renderer = new t.WebGLRenderer();
 	renderer.setSize(WIDTH, HEIGHT);
 
+
+    // spotLight = new THREE.SpotLight (0x00ff00);
+	// spotlight.position.set( 1990,UNITSIZE * .17 ,-619 );
+	// scene.add( spotlight );
+
 	// Add the canvas to the document
 	renderer.domElement.style.backgroundColor = '#D6F1FF'; // easier to see
 	document.body.appendChild(renderer.domElement);
@@ -149,10 +155,7 @@ function init() {
 
 	// // Display HUD
 	$('body').append('<canvas id="radar" width="200" height="200"></canvas>');
-	// $('body').append('<div id="hud"><p>Health: <span id="health">100</span><br />Score: <span id="score">0</span></p></div>');
-	// $('body').append('<div id="credits"><p>Created by <a href="http://www.isaacsukin.com/">Isaac Sukin</a> using <a href="http://mrdoob.github.com/three.js/">Three.js</a><br />WASD to move, mouse to look, click to shoot</p></div>');
 
-	// Set up "hurt" flash
 	document.getElementById("healthText").style.display="block";
 	document.getElementById("healthText").disabled = true;
 	document.getElementById("health").style.display="block";
@@ -181,30 +184,28 @@ function render() {
 	var delta = clock.getDelta(), speed = delta * BULLETMOVESPEED;
 	var aispeed = delta * SPEEDENEMY;
 	controls.update(delta); // Move camera
-	if ( ready )
-	{
-		helper.update( delta );
-	}
 
+	
+	if ( ai.length == 0)
+	{
+	
+		portal= true
+		ChangeLevel(portal)
+		
+	}
 	if ( ai.length > 0) {
 		for(dancer_i of ai){
 			if(distance(dancer_i.position.x, dancer_i.position.z, cam.position.x, cam.position.z) < 90){
 				health -= 0.1;		
-				action = dancer_i.mixer.clipAction(dancer_i.animations[ 15 ], dancer_i);
+				action = dancer_i.mixer.clipAction(dancer_i.animations[ 7 ], dancer_i);
 				action.play();
-				setTimeout(function () {
-					action.stop();
-					action = dancer_i.mixer.clipAction( dancer_i.animations[ 14 ], dancer_i );
-				}, 1600);
-				break
 			}
-			 var action = dancer_i.mixer.clipAction( dancer_i.animations[ 14 ], dancer_i );
-			 action.play();
+			//  var action = dancer_i.mixer.clipAction( dancer_i.animations[ 11 ], dancer_i );
+			//  action.play();
 			dancer_i.mixer.update( ( deltat ) * 0.001 );
 
 		}
 	}
-	// Update bullets. Walk backwards through the list so we can remove items.
 	for (var i = bullets.length-1; i >= 0; i--) {
 		var b = bullets[i], p = b.position, d = b.ray.direction;
 		if (checkWallCollision(p))
@@ -218,13 +219,10 @@ function render() {
 		for (var j = ai.length-1; j >= 0; j--)
 		{
 			var a = ai[j];
-			// var v = a.geometry.vertices[0];
 			var c = a.position;
-			// console.log(distance(c.x, c.z, cam.position.x, cam.position.z) )
-			// var x = Math.abs(v.x), z = Math.abs(v.z);
-			//console.log(Math.round(p.x), Math.round(p.z), c.x, c.z, x, z);
-			if (p.x < c.x + 300 && p.x > c.x - 300 &&
-				p.z < c.z + 300 && p.z > c.z - 300  && b.owner != a)
+
+			if (p.x < c.x + 20 && p.x > c.x - 20 &&
+				p.z < c.z + 20 && p.z > c.z - 20  && b.owner != a)
 			{
 				bullets.splice(i, 1);
 				scene.remove(b);
@@ -233,23 +231,12 @@ function render() {
 				break;
 			}
 		}
-		// Bullet hits player
-		
-		// if (distance(c.x, c.z, cam.position.x, cam.position.z) < 25 && b.owner != cam) {
-		// 	$('#hurt').fadeIn(75);
-		// 	health -= 10;
-		// 	if (health < 0) health = 0;
-		// 	val = health < 25 ? '<span style="color: darkRed">' + health + '</span>' : health;
-		// 	$('#health').html(val);
-		// 	bullets.splice(i, 1);
-		// 	scene.remove(b);
-		// 	$('#hurt').fadeOut(350);
+
 
 		// }
 		if (!hit)
 		{
 			b.translateX(speed * d.x);
-			//bullets[i].translateY(speed * bullets[i].direction.y);
 			b.translateZ(speed * d.z);
 		}
 	}
@@ -257,51 +244,34 @@ function render() {
 	// Update AI.
 	for (var i = ai.length-1; i >= 0; i--)
 	{
+	
 
 		var a = ai[i];
 		if (a.health <= 0)
 		{	
-			var action = a.mixer.clipAction( a.animations[ 5 ], a );
+			var action = a.mixer.clipAction( a.animations[ 0 ], a );
 			action.play();	
 			a.mixer.update( ( deltat ) * 0.0001 );
 			Muelte(i,a)
-
 			
 		}
-		// Move AI
 
-		
-		var r = Math.random();
-		if (r > 0.995)
+		if (checkWallCollision(a.position))
 		{
-			a.lastRandomX = Math.random() * 2 - 1;
-			a.lastRandomZ = Math.random() * 2 - 1;
-			console.log(a.lastRandomX)
-
+	
+			a.translateZ(-4 * aispeed);
 		}
-		var c = getMapSector(a.position);
-
-		if (c.x < 0 || c.x >= mapW || c.y < 0 || c.y >= mapH || checkWallCollision(a.position))
+		else
 		{
-			// a.translateX(-2 * aispeed * a.lastRandomX);
-			a.translateZ(-2 * aispeed * a.lastRandomZ);
-			a.lastRandomX = Math.random() * 2 - 1;
-			a.lastRandomZ = Math.random() * 2 - 1;
+
+			if(distance(a.position.x, a.position.z, cam.position.x, cam.position.z) < 600)
+			{
+				a.lookAt(cam.position);
+				a.translateZ(2);
+				a.position.y= 3
+			}
+	
 		}
-
-		if (c.x < -1 || c.x > mapW || c.z < -1 || c.z > mapH)
-		{
-			ai.splice(i, 1);
-			scene.remove(a);
-		}
-		
-		a.rotation.y = Math.atan2( ( cam.position.x - a.position.x ), ( cam.position.z - a.position.z ) );
-		a.translateZ(aispeed * a.lastRandomZ);
-		// a.translateX(aispeed * a.lastRandomX);
-		// a.lookAt(cam.position);
-        // a.translateZ(.5);
-
-
 
 		var cc = getMapSector(cam.position);
 		if (Date.now() > a.lastShot + 750 && distance(c.x, c.z, cc.x, cc.z) < 2) {
@@ -411,7 +381,7 @@ function setupScene()
 	scene.add( directionalLight2 );
 
 	var imagePrefix = "images/Skybox/";
-	var directions  = ["3", "3", "3", "3", "3", "3"];
+	var directions  = ["3", "3", "1", "3", "3", "3"];
 	var imageSuffix = ".png";
 	var skyGeometry = new THREE.CubeGeometry( 10000, 10000, 10000 );
 	var loader = new THREE.TextureLoader();
@@ -695,12 +665,24 @@ function onDocumentKeyDown(event) {
 
 };
 
-function ChangeLevel(open) {
-    setTimeout(function () {
-        if (open) {
-			$('body').append('<div id="credits"><a href="Menu.html"> </a></div>');
-        }
-    }, 2000);
+
+function ChangeLevel(portal) {
+
+	if (cam.position.x < 1990 + 100 && cam.position.x > 1990 - 100 &&
+		cam.position.z < -619 + 100 && cam.position.z > -619 - 100 && portal
+	)
+	{
+		document.getElementById("content").style.display="block";
+		document.getElementById("content").disabled = true;
+		document.getElementById("content").innerHTML= "PRESS E TO PASS THE PORTAL";;
+		if(KeyE)
+		{
+		window.location.href = "Level3.html";
+		setTimeout(function () {
+				$('body').append('<div id="credits"><a href="Level3.html"> </a></div>');
+		}, 1000);
+		}
+	}
 }
 
 function waitcreate() {
@@ -712,7 +694,7 @@ function waitcreate() {
 function addSound()
 {
 	var loader = new THREE.AudioLoader();
-	loader.load( 'sound/Suspense.mp3', function ( buffer )
+	loader.load( 'sound/E3M8.mp3', function ( buffer )
     {
 		sound.setBuffer( buffer );
 		sound.setLoop( true );
@@ -778,7 +760,7 @@ function clone ()
 	var c = getMapSector(cam.position);
 	var newDancer = cloneFbx(dancer);
 	newDancer.mixer =  new THREE.AnimationMixer( scene );
-	var action = newDancer.mixer.clipAction( newDancer.animations[ 14 ], newDancer );
+	var action = newDancer.mixer.clipAction( newDancer.animations[ 7 ], newDancer );
 	action.play();
 
 	do {
@@ -806,11 +788,11 @@ function loadFBX()
     mixer = new THREE.AnimationMixer( scene );
 
     var loader = new THREE.FBXLoader();
-    loader.load( 'models/tfc2/tfc2.fbx', function ( object )
+    loader.load( 'models/NC2/thc2_rig5.fbx', function ( object ) 
     {
 
         object.mixer = new THREE.AnimationMixer( scene );
-        var action = object.mixer.clipAction( object.animations[ 14 ], object );
+        var action = object.mixer.clipAction( object.animations[ 11 ], object );
 		object.scale.set(50, 50, 50);
 		do {
 			var x = getRandBetween(0, mapW-1);
@@ -818,23 +800,28 @@ function loadFBX()
 		} while (map[x][z] > 0 || (x == c.x && z == c.z));
 			x = Math.floor(x - mapW/2) * UNITSIZE;
 			z = Math.floor(z - mapW/2) * UNITSIZE;
-			object.position.set(x, 3, z);
+			// object.position.set(x, 3, z);
 			object.health = 100;
 			object.pathPos = 1;
 			object.lastRandomX = Math.random();
 			object.lastRandomZ = Math.random();
 		action.play();
-		var texture = new THREE.TextureLoader().load('models/tfc2/thc7_Base_Color.png');
-        var normalMap = new THREE.TextureLoader().load('models/tfc2/thc7_normal_base.png');
 
+		var texture = new THREE.TextureLoader().load('models/NC2/NC2_body_Diffuse.png');
+        var normalMap = new THREE.TextureLoader().load('models/NC2/NC2_body_Normal.png');
+        var texture2 = new THREE.TextureLoader().load('models/NC2/NC2_metall_Diffuse_PS.png');
+		var normalMap2 = new THREE.TextureLoader().load('models/NC2/NC2_metall_Normal.png');
+		
         object.traverse( function ( child )
         {
             if ( child instanceof THREE.Mesh )
             {
                 child.castShadow = true;
                 child.receiveShadow = true;
-                child.material.map = texture;
-                child.material.normalMap = normalMap;
+				child.material[1].map = texture;
+                child.material[1].normalMap = normalMap;
+                child.material[0].map = texture2;
+                child.material[0].normalMap = normalMap2;
             }
         } );
         console.log(object.animations);
@@ -845,12 +832,11 @@ function loadFBX()
     } );
 }
 function Muelte(i,a) {
-	a.position = a.position	
     setTimeout(function () {
-		a.rotation.x = -70
-		ai.splice(i, 1);			
+		ai.splice(i, 1);	
+		scene.remove(a);		
 		kills++;
 		$('#score').html(kills * 100);
-	}, 3000);
+	}, 1300);
 	
 }
