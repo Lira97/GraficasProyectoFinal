@@ -7,6 +7,7 @@ var particleGeometry;
 var particleCount=20;
 var explosionPower =1.06;
 var door
+var pause = false;
 var KeyE
 var duration = 20000; // ms
 var helper;
@@ -15,6 +16,7 @@ var ready = false;
 var robot_idle = null
 var robots = [];
 var robot_mixers = [];
+var numBullets = 100;
 var robots_animations = [];
 var listener = new THREE.AudioListener();
 var mixer = null;
@@ -57,7 +59,7 @@ var WIDTH = window.innerWidth,
 	UNITSIZE = 250,
 	WALLHEIGHT = UNITSIZE,
 	MOVESPEED = 200,
-	SPEEDENEMY = 10,
+	SPEEDENEMY = 8,
 	LOOKSPEED = 0.075,
 	BULLETMOVESPEED = MOVESPEED * 5,
 	NUMAI = 10,
@@ -83,15 +85,6 @@ $(document).ready(function() {
 		setInterval(drawRadar, 1000);
 		animate();
 	});
-	/*
-	new t.ColladaLoader().load('models/Yoshi/Yoshi.dae', function(collada) {
-		model = collada.scene;
-		skin = collada.skins[0];
-		model.scale.set(0.2, 0.2, 0.2);
-		model.position.set(0, 5, 0);
-		scene.add(model);
-	});
-	*/
 });
 
 // Setup
@@ -146,11 +139,7 @@ function init() {
 	});
 
 	// // Display HUD
-	$('body').append('<canvas id="radar" width="200" height="200"></canvas>');
-	$('body').append('<div id="hud"><p>Health: <span id="health">100</span><br />Score: <span id="score">0</span></p></div>');
-	// $('body').append('<div id="credits"><p>Created by <a href="http://www.isaacsukin.com/">Isaac Sukin</a> using <a href="http://mrdoob.github.com/three.js/">Three.js</a><br />WASD to move, mouse to look, click to shoot</p></div>');
-
-	// Set up "hurt" flash
+	$('body').append('<canvas id="radar" width="200" height="150"></canvas>');
 	document.getElementById("healthText").style.display="block";
 	document.getElementById("healthText").disabled = true;
 	document.getElementById("health").style.display="block";
@@ -158,15 +147,23 @@ function init() {
 	$('body').append('<div id="hurt"></div>');
 	$('#hurt').css({width: WIDTH, height: HEIGHT,});
 	document.addEventListener("keydown", onDocumentKeyDown, false);
+	initAnimations();
 
 }
 
 // Helper function for browser frames
 function animate() {
+	
 	if (runAnim) {
 		requestAnimationFrame(animate);
 	}
-	render();
+	if (!pause){
+		render();
+	}
+
+	
+
+	
 }
 
 // Update and display
@@ -188,13 +185,12 @@ function render() {
 	if ( ai.length > 0) {
 		for(dancer_i of ai){
 			if(distance(dancer_i.position.x, dancer_i.position.z, cam.position.x, cam.position.z) < 90){
-				health -= 0.1;	
+				health -= 0.5;	
 				console.log(health)	
 				action = dancer_i.mixer.clipAction(dancer_i.animations[ 7 ], dancer_i);
+				document.getElementById("health").value -= .5;
 				action.play();
 			}
-			//  var action = dancer_i.mixer.clipAction( dancer_i.animations[ 11 ], dancer_i );
-			//  action.play();
 			dancer_i.mixer.update( ( deltat ) * 0.001 );
 
 		}
@@ -233,31 +229,25 @@ function render() {
 
 	// Update AI.
 	for (var i = ai.length-1; i >= 0; i--){
-	
-
 		var a = ai[i];
+		var action;
 		if (a.health <= 0){	
-			var action = a.mixer.clipAction( a.animations[ 0 ], a );
+			action = a.mixer.clipAction( a.animations[ 0 ], a );
 			action.play();	
-			a.mixer.update( ( deltat ) * 0.0001 );
 			Muelte(i,a)
-			
 		}
 		
 		if (checkWallCollision(a.position)){
-			if(flag == 0){
-				a.rotation.y = 45
-				flag = 1
-			}
 			a.translateZ(2 * aispeed);
-			// a.rotation.y += 1
 			console.log(a.position)
 		}else{
-			flag = 0
-			a.lookAt(cam.position);
-			a.translateZ(3);
-			a.position.y= 3
-	
+			if(pause == false){
+				a.lookAt(cam.position);
+				a.translateZ(2);
+				a.position.y= 3
+				a.mixer.update( ( deltat ) * 0.0001 );
+				
+			}
 		}
 
 		var cc = getMapSector(cam.position);
@@ -269,16 +259,27 @@ function render() {
 	}
 
 	renderer.render(scene, cam); // Repaint
+	if (health <= 0) {
+		sound.stop();
+		runAnim = false;
+		document.getElementById("health").style.display="none";
+		document.getElementById("health").disabled = true;
+		document.getElementById("healthText").style.display="none";
+		document.getElementById("healthText").disabled = true;
+		document.getElementById("health").value = 100
+		$(renderer.domElement).fadeOut();
+		setTimeout(function () {
+			document.location.reload()
+		}, 3000);
 
+	}
 
 }
 
 
 // Set up the objects in the world
-function setupScene()
-{
+function setupScene(){
 	var UNITSIZE = 250, units = mapW;
-
 	// Geometry: floor
 	var floor = new t.Mesh(
 			new t.CubeGeometry(units * UNITSIZE, 10, units * UNITSIZE),
@@ -290,12 +291,6 @@ function setupScene()
 		);
 	celing.position.set(0,90,0)
 	scene.add(floor);
-	//  scene.add(celing);
-	// console.log(floor.position)
-	// console.log(cam.position)
-
-	// console.log(celing.position)
-	// Geometry: walls
 	var cube = new t.CubeGeometry(UNITSIZE, WALLHEIGHT, UNITSIZE);
 	var materials = [
 	                 new t.MeshLambertMaterial({color: 0xffefd8,map: t.ImageUtils.loadTexture('images/w.png')}),
@@ -305,10 +300,8 @@ function setupScene()
 	                 ];
 	for (var i = 0; i < mapW; i++) {
 		for (var j = 0, m = map[i].length; j < m; j++) {
-			if (map[i][j])
-			{
-				if(map[i][j] == 2)
-				{
+			if (map[i][j]){
+				if(map[i][j] == 2){
 					door = new t.Mesh(cube, materials[map[i][j]-1]);
 					door.position.x = (i - units/2) * UNITSIZE;
 					door.position.y = WALLHEIGHT/2;
@@ -317,20 +310,15 @@ function setupScene()
 					scene.add(door);
 
 				}
-				else if (map[i][j] == 2)
-				{
+				else if (map[i][j] == 2){
 					loadRock((i - units/2) * UNITSIZE,WALLHEIGHT/2,(j - units/2) * UNITSIZE)
-	
-
-				}
-				else{
+				}else{
 					var wall = new t.Mesh(cube, materials[map[i][j]-1]);
 					wall.position.x = (i - units/2) * UNITSIZE;
 					wall.position.y = WALLHEIGHT/2;
 					wall.position.z = (j - units/2) * UNITSIZE;
 					scene.add(wall);
 				}
-
 			}
 		}
 	}
@@ -535,48 +523,8 @@ function getRandBetween(lo, hi) {
  return parseInt(Math.floor(Math.random()*(hi-lo+1))+lo, 10);
 }
 
-function doExplosionLogic()
-{
-	if(!particles.visible)return;
-	for (var i = 0; i < particleCount; i ++ ) {
-		particleGeometry.vertices[i].multiplyScalar(explosionPower);
-	}
-	if(explosionPower>1.005){
-		explosionPower-=0.001;
-	}else{
-		particles.visible=false;
-	}
-	particleGeometry.verticesNeedUpdate = true;
-}
-function explode(x,y,z)
-{
-	particles.position.y=y;
-	particles.position.z=z;
-	particles.position.x=x;
-	for (var i = 0; i < particleCount; i ++ ) {
-		var vertex = new THREE.Vector3();
-		vertex.x = -0.2+Math.random() * 0.4;
-		vertex.y = -0.2+Math.random() * 0.4 ;
-		vertex.z = -0.2+Math.random() * 0.4;
-		particleGeometry.vertices[i]=vertex;
-	}
-	explosionPower=1.2;
-	particles.visible=true;
-}
-function addExplosion(){
-	particleGeometry = new THREE.Geometry();
-	for (var i = 0; i < particleCount; i ++ ) {
-		var vertex = new THREE.Vector3();
-		particleGeometry.vertices.push( vertex );
-	}
-	var pMaterial = new THREE.PointsMaterial({
-	  color: 0x74F016,
-	  size: 5
-	});
-	particles = new THREE.Points( particleGeometry, pMaterial );
-	scene.add( particles );
-	particles.visible=false;
-}
+
+
 
 function initAnimations()
 {
@@ -610,6 +558,14 @@ function onDocumentKeyDown(event) {
 	{
 		KeyE = true
 
+	}
+	else if(keyCode == 80){
+		if(pause == false){
+			pause = true
+		}else{
+			pause = false
+		}
+		
 	}
 	else
 	{
