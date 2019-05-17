@@ -125,8 +125,29 @@ p {
     left: 0;
 
 }
+#score {
+position:absolute;
+left:430px;
+top:15px;
+font-family: "Comic Sans MS", cursive, sans-serif;
+font-size: 25px;
+color: white;
+display: none;
+}
 #level2 {
   background-image: url('../images/back2.jpeg');
+  cursor: pointer;
+  /* Full height */
+  height: 100%;
+  /* Center and scale the image nicely */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+    left: 0;
+
+}
+#gameover{
+  background-image: url('../images/gameover.jpeg');
   cursor: pointer;
   /* Full height */
   height: 100%;
@@ -161,7 +182,7 @@ display: none;
 #health{
 position:absolute;
 left:101px;
-top:-14px;
+top:-19px;
 background-color: black;
 display: none;
 }
