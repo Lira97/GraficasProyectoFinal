@@ -873,10 +873,8 @@ function ChangeLevel() {
     }, 1000);
 }
 function quitartexto() {
-    setTimeout(function () {
-		document.getElementById("content").style.display="none";
+    document.getElementById("content").style.display="none";
 		document.getElementById("content").disabled = false;
-    }, 1000);
 }
 function addSound()
 {
