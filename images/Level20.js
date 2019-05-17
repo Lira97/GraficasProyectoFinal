@@ -207,20 +207,20 @@ function render() {
 			lockheal = false
 			// lastHealthPickup = Date.now();
 			scene.remove(healthcube)
-			health += 20;
+			health += 20;	
 			if (health > 100 )
 			{
-				var num = health - 100
-				health -= num
+				var num = health - 100 
+				health -= num 
 			}
 			document.getElementById("health").value = Math.floor(health);
 		}
-
+	
 	ammo.rotation.x += 0.004
 	ammo.rotation.y += 0.008;
 	// Allow picking it up once per minute
 		if (distance(cam.position.x, cam.position.z, ammo.position.x, ammo.position.z) < 15 && lockbullet) {
-			numBullets += 40
+			numBullets += 40 
 			lockbullet = false
 			scene.remove(ammo)
 			document.getElementById("score").innerHTML = "Bullets: " + numBullets;
@@ -228,10 +228,10 @@ function render() {
 		}
 	if ( ai.length == 0)
 	{
-
+	
 		portal= true
 		ChangeLevel(portal)
-
+		
 	}
 
 	for (var i = bullets.length-1; i >= 0; i--) {
@@ -284,7 +284,7 @@ function render() {
 			}
 			if(distance(a.position.x, a.position.z, cam.position.x, cam.position.z) < 90)
 			{
-				health -= .5;
+				health -= .5;		
 				action = a.mixer.clipAction(a.animations[ 7 ], a);
 				action.play();
 				document.getElementById("health").value -= .5;
@@ -294,7 +294,7 @@ function render() {
 			a.mixer.update( ( deltat ) * 0.001 );
 		if (checkWallCollision(a.position))
 		{
-
+	
 			a.translateZ(-4 * aispeed);
 		}
 		else
@@ -306,13 +306,13 @@ function render() {
 				a.translateZ(2);
 				a.position.y= 3
 			}
-
+	
 		}
 		var cc = getMapSector(cam.position);
 		if (Date.now() > a.lastShot + 750 && distance(c.x, c.z, cc.x, cc.z) < 2 ) {
 			createBullet(a);
 			a.lastShot = Date.now();
-
+			
 		}
 
 	}
@@ -324,13 +324,11 @@ function render() {
 		runAnim = false;
 		document.getElementById("health").style.display="none";
 		document.getElementById("health").disabled = true;
-    document.getElementById("score").style.display="none";
-    document.getElementById("score").disabled = true;
 		document.getElementById("healthText").style.display="none";
 		document.getElementById("healthText").disabled = true;
 		document.getElementById("health").value = 100
 		$(renderer.domElement).fadeOut();
-
+	
 		$('#radar, #hud, #credits').fadeOut();
 		$('#level2').fadeIn();
 		$('#level2').html('Ouch! Click to restart...');
@@ -361,7 +359,7 @@ function render() {
 // Set up the objects in the world
 function setupScene()
 {
-
+	
 	var UNITSIZE = 250, units = mapW;
 
 	// Geometry: floor
@@ -413,7 +411,7 @@ function setupScene()
 				else if (map[i][j] == 2)
 				{
 					loadRock((i - units/2) * UNITSIZE,WALLHEIGHT/2,(j - units/2) * UNITSIZE)
-
+	
 
 				}
 				else{
@@ -846,7 +844,7 @@ function loadFBX()
     mixer = new THREE.AnimationMixer( scene );
 
     var loader = new THREE.FBXLoader();
-    loader.load( 'models/NC2/thc2_rig5.fbx', function ( object )
+    loader.load( 'models/NC2/thc2_rig5.fbx', function ( object ) 
     {
 
         object.mixer = new THREE.AnimationMixer( scene );
@@ -870,7 +868,7 @@ function loadFBX()
         var normalMap = new THREE.TextureLoader().load('models/NC2/NC2_body_Normal.png');
         var texture2 = new THREE.TextureLoader().load('models/NC2/NC2_metall_Diffuse_PS.png');
 		var normalMap2 = new THREE.TextureLoader().load('models/NC2/NC2_metall_Normal.png');
-
+		
         object.traverse( function ( child )
         {
             if ( child instanceof THREE.Mesh )
@@ -890,13 +888,13 @@ function loadFBX()
         // scene.add( object );
     } );
 }
-function Muelte(i,a)
-{
+function Muelte(i,a) 
+{	
     setTimeout(function () {
-		ai.splice(i, 1);
-		scene.remove(a);
+		ai.splice(i, 1);	
+		scene.remove(a);		
 		kills++;
 		lock = true
 		console.log("uuuuu")
-	}, 1300);
+	}, 1300);	
 }

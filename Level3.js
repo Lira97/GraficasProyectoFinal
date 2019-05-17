@@ -152,7 +152,7 @@ function init() {
 
 // Helper function for browser frames
 function animate() {
-	
+
 	if (runAnim) {
 		requestAnimationFrame(animate);
 	}
@@ -160,9 +160,9 @@ function animate() {
 		render();
 	}
 
-	
 
-	
+
+
 }
 
 // Update and display
@@ -175,17 +175,17 @@ function render() {
 	var aispeed = delta * SPEEDENEMY;
 	controls.update(delta); // Move camera
 
-	
+
 	if ( ai.length == 0){
 		portal= true
 		ChangeLevel(portal)
-		
+
 	}
 	if ( ai.length > 0) {
 		for(dancer_i of ai){
 			if(distance(dancer_i.position.x, dancer_i.position.z, cam.position.x, cam.position.z) < 90){
-				health -= 0.5;	
-				console.log(health)	
+				health -= 0.5;
+				console.log(health)
 				action = dancer_i.mixer.clipAction(dancer_i.animations[ 7 ], dancer_i);
 				document.getElementById("health").value -= .5;
 				action.play();
@@ -230,12 +230,13 @@ function render() {
 	for (var i = ai.length-1; i >= 0; i--){
 		var a = ai[i];
 		var action;
-		if (a.health <= 0){	
+		if (a.health <= 0){
 			action = a.mixer.clipAction( a.animations[ 0 ], a );
-			action.play();	
+			action.play();
 			Muelte(i,a)
+
 		}
-		
+
 		if (checkWallCollision(a.position)){
 			a.translateZ(2 * aispeed);
 			console.log(a.position)
@@ -245,7 +246,7 @@ function render() {
 				a.translateZ(2);
 				a.position.y= 3
 				a.mixer.update( ( deltat ) * 0.0001 );
-				
+
 			}
 		}
 
@@ -267,9 +268,7 @@ function render() {
 		document.getElementById("healthText").disabled = true;
 		document.getElementById("health").value = 100
 		$(renderer.domElement).fadeOut();
-		setTimeout(function () {
-			document.location.reload()
-		}, 3000);
+    window.location.href = "Level3.html";
 
 	}
 
@@ -564,7 +563,7 @@ function onDocumentKeyDown(event) {
 		}else{
 			pause = false
 		}
-		
+
 	}
 	else
 	{
@@ -653,12 +652,10 @@ function loadFBX()
     } );
 }
 function Muelte(i,a) {
-	a.position = a.position	
+	a.position = a.position
     setTimeout(function () {
 		a.rotation.x = -70
-		ai.splice(i, 1);			
-		kills++;
-		$('#score').html(kills * 100);
-	}, 3000);
-	
+		ai.splice(i, 1);
+	}, 2000);
+  window.location.href = "Credits.html";
 }

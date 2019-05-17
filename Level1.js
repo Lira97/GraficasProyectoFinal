@@ -197,20 +197,20 @@ function render() {
 	if (distance(cam.position.x, cam.position.z, healthcube.position.x, healthcube.position.z) < 15 && lockheal ) {
 			lockheal = false
 			scene.remove(healthcube)
-			health += 20;	
+			health += 20;
 			if (health > 100 )
 			{
-				var num = health - 100 
-				health -= num 
+				var num = health - 100
+				health -= num
 			}
 			document.getElementById("health").value = Math.floor(health);
 		}
-	
+
 	ammo.rotation.x += 0.004
 	ammo.rotation.y += 0.008;
 	// Allow picking it up once per minute
 		if (distance(cam.position.x, cam.position.z, ammo.position.x, ammo.position.z) < 15 && lockbullet) {
-			numBullets += 40 
+			numBullets += 40
 			lockbullet = false
 			scene.remove(ammo)
 			document.getElementById("score").innerHTML = "Bullets: " + numBullets;
@@ -398,16 +398,20 @@ function render() {
 		runAnim = false;
 		document.getElementById("health").style.display="none";
 		document.getElementById("health").disabled = true;
+    document.getElementById("score").style.display="none";
+    document.getElementById("score").disabled = true;
 		document.getElementById("healthText").style.display="none";
 		document.getElementById("healthText").disabled = true;
 		document.getElementById("health").value = 100
+
 		$(renderer.domElement).fadeOut();
 		$('#radar, #hud, #credits').fadeOut();
-		$('#intro').fadeIn();
+    $('#intro').fadeIn();
+    // $('#gameover').fadeOut();
 		$('#intro').html('Ouch! Click to restart...');
 		$('#intro').one('click', function() {
 			location = location;
-	
+
 			// $(renderer.domElement).fadeIn();
 			// $('#radar, #hud, #credits').fadeIn();
 			// $(this).fadeOut();
@@ -420,7 +424,7 @@ function render() {
 			// $('#score').html(kills * 100);
 			// cam.translateX(-cam.position.x);
 			// cam.translateZ(-cam.position.z);
-	
+
 		});
 	}
 }
