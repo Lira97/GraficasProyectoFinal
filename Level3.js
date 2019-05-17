@@ -92,7 +92,6 @@ function init() {
 	clock = new t.Clock(); // Used in render() for controls.update()
 	projector = new t.Projector(); // Used in bullet projection
 	scene = new t.Scene(); // Holds all objects in the canvas
-	// scene.fog = new t.FogExp2(0xD6F1FF, 0.0005); // color, density
 
 	// Set up camera
 	cam = new t.PerspectiveCamera(60, ASPECT, 1, 10000); // FOV, aspect, near, far
